@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
+import HomePage from './pages/HomePage'
+import DiningPage from './pages/DiningPage'
 
 const STORAGE_KEY = 'bytebite-profile'
 const MAX_MATCH_SCORE = 6
@@ -458,23 +460,6 @@ function App() {
 
   const heroPreview = diningHalls.slice(0, 3)
 
-  const renderChoicePill = (collection, activeValue, onSelect) => (
-    <div className="chip-row">
-      {collection.map((option) => (
-        <button
-          key={option.value}
-          type="button"
-          className={`chip ${activeValue === option.value ? 'chip--active' : ''}`}
-          aria-pressed={activeValue === option.value}
-          onClick={() => onSelect(option.value)}
-        >
-          <span>{option.label}</span>
-          <small>{option.description}</small>
-        </button>
-      ))}
-    </div>
-  )
-
   return (
     <div className="app-shell">
       <nav className="top-nav">
@@ -553,354 +538,46 @@ function App() {
       </header>
 
       {view === 'home' && (
-        <main className="home-grid">
-          <section className="card auth-card">
-            <div className="auth-toggle">
-              <button
-                type="button"
-                className={authMode === 'signup' ? 'auth-tab auth-tab--active' : 'auth-tab'}
-                onClick={() => setAuthMode('signup')}
-              >
-                Sign up
-              </button>
-              <button
-                type="button"
-                className={authMode === 'login' ? 'auth-tab auth-tab--active' : 'auth-tab'}
-                onClick={() => setAuthMode('login')}
-              >
-                Log in
-              </button>
-            </div>
-
-            {authMode === 'signup' ? (
-              <form className="auth-form" onSubmit={handleSignupSubmit}>
-                <label className="input-field">
-                  <span>Full name</span>
-                  <input
-                    type="text"
-                    value={signupForm.name}
-                    onChange={(event) => updateSignupField('name', event.target.value)}
-                    required
-                    placeholder="Avery Byte"
-                  />
-                </label>
-                <label className="input-field">
-                  <span>Campus email</span>
-                  <input
-                    type="email"
-                    value={signupForm.email}
-                    onChange={(event) => updateSignupField('email', event.target.value)}
-                    required
-                    placeholder="you@school.edu"
-                  />
-                </label>
-                <label className="input-field">
-                  <span>Password</span>
-                  <input
-                    type="password"
-                    value={signupForm.password}
-                    onChange={(event) => updateSignupField('password', event.target.value)}
-                    required
-                    placeholder="••••••••"
-                  />
-                </label>
-
-                <div className="choice-field">
-                  <span>Body goal</span>
-                  {renderChoicePill(goalOptions, signupForm.goal, (value) =>
-                    updateSignupField('goal', value),
-                  )}
-                </div>
-
-                <div className="choice-field">
-                  <span>Diet style</span>
-                  {renderChoicePill(dietOptions, signupForm.diet, (value) =>
-                    updateSignupField('diet', value),
-                  )}
-                </div>
-
-                <button className="primary" type="submit">
-                  Create my plan
-                </button>
-              </form>
-            ) : (
-              <form className="auth-form" onSubmit={handleLoginSubmit}>
-                <p className="form-subcopy">
-                  Log in to pull up your saved goal and dietary preferences.
-                </p>
-                <label className="input-field">
-                  <span>Campus email</span>
-                  <input
-                    type="email"
-                    value={loginForm.email}
-                    onChange={(event) =>
-                      setLoginForm((prev) => ({ ...prev, email: event.target.value }))
-                    }
-                    required
-                    placeholder="you@school.edu"
-                  />
-                </label>
-                <label className="input-field">
-                  <span>Password</span>
-                  <input
-                    type="password"
-                    value={loginForm.password}
-                    onChange={(event) =>
-                      setLoginForm((prev) => ({ ...prev, password: event.target.value }))
-                    }
-                    required
-                    placeholder="••••••••"
-                  />
-                </label>
-                <button className="primary" type="submit">
-                  Log in & personalize
-                </button>
-              </form>
-            )}
-
-            {authError && <p className="form-error">{authError}</p>}
-          </section>
-
-          <section className="card preview-card">
-            <p className="eyebrow">Campus snapshot</p>
-            <h2>Here’s what’s cooking tonight</h2>
-            <p className="preview-copy">
-              See every dining hall in a neutral lineup. Once you sign up or log in, ByteBite ranks
-              them based on your goal and if you are vegetarian or vegan.
-            </p>
-            <ul className="mini-hall-list">
-              {heroPreview.map((hall) => (
-                <li key={hall.id}>
-                  <div id = "mini-hall-info">
-                    <strong>{hall.name}</strong>
-                    <span>{hall.signature}</span>
-                  </div>
-                  <span className="mini-area">{hall.area}</span>
-                </li>
-              ))}
-            </ul>
-
-            <button className="secondary" type="button" onClick={() => setView('dining')}>
-              Go to the dining explorer
-            </button>
-          </section>
-        </main>
+        <HomePage
+          authMode={authMode}
+          setAuthMode={setAuthMode}
+          signupForm={signupForm}
+          loginForm={loginForm}
+          updateSignupField={updateSignupField}
+          setLoginForm={setLoginForm}
+          handleSignupSubmit={handleSignupSubmit}
+          handleLoginSubmit={handleLoginSubmit}
+          authError={authError}
+          goalOptions={goalOptions}
+          dietOptions={dietOptions}
+          heroPreview={heroPreview}
+          onNavigateToDining={() => setView('dining')}
+        />
       )}
 
       {view === 'dining' && (
-        <section className="dining-page">
-          <div className="dining-header">
-            <div>
-              <p className="eyebrow">Dining Explorer</p>
-              <h2>
-                {hasPersonalizedRankings
-                  ? `${userProfile.name.split(' ')[0]}'s personalized lineup`
-                  : isAuthenticated
-                  ? 'Neutral campus lineup — signed in'
-                  : 'Neutral campus lineup'}
-              </h2>
-              <p>
-                {hasPersonalizedRankings
-                  ? `Ranked using your ${goalLabelMap[userProfile.goal].toLowerCase()} goal and ${dietLabelMap[userProfile.diet]
-                      .toLowerCase()
-                      .replace('no preference', 'omnivore preference')}.`
-                  : isAuthenticated
-                  ? 'You are signed in. Tap “Personalize my rankings” to generate your tailored order.'
-                  : 'Sign up or log in to sort these halls by your goals and dietary choices.'}
-              </p>
-            </div>
-            <div className="dining-actions">
-              <button className="ghost-button" type="button" onClick={() => setView('home')}>
-                Back to planner
-              </button>
-              {isAuthenticated && !hasPersonalizedRankings && (
-                <button className="primary" type="button" onClick={handleActivatePersonalization}>
-                  Personalize my rankings
-                </button>
-              )}
-            </div>
-          </div>
-
-        {hallCount > 0 && (
-          <div className="view-toggle">
-            <span>View style:</span>
-            <div className="view-toggle__buttons">
-              <button
-                type="button"
-                className={
-                  hallViewMode === 'carousel' ? 'toggle-btn toggle-btn--active' : 'toggle-btn'
-                }
-                onClick={() => changeHallViewMode('carousel')}
-              >
-                Spotlight
-              </button>
-              <button
-                type="button"
-                className={
-                  hallViewMode === 'grid' ? 'toggle-btn toggle-btn--active' : 'toggle-btn'
-                }
-                onClick={() => changeHallViewMode('grid')}
-              >
-                All halls
-              </button>
-            </div>
-          </div>
-        )}
-
-        {showCarousel && spotlightHall && (
-          <div className="carousel-controls">
-            <button
-              type="button"
-              className="carousel-button"
-              onClick={goToPreviousHall}
-              aria-label="Show previous dining hall"
-            >
-              Prev
-            </button>
-            <div className="carousel-status">
-              <strong>{spotlightHall.name}</strong>
-              <span>{spotlightHall.area}</span>
-              <small>
-                {hallSpotlightIndex + 1}/{hallCount}
-              </small>
-            </div>
-            <button
-              type="button"
-              className="carousel-button"
-              onClick={goToNextHall}
-              aria-label="Show next dining hall"
-            >
-              Next
-            </button>
-          </div>
-        )}
-
-        <div className={showCarousel ? 'hall-grid hall-grid--single' : 'hall-grid'}>
-          {hallsToRender.map((hall) => {
-            const matchesGoal =
-              hasPersonalizedRankings && hall.goalFocus.includes(userProfile.goal)
-            const matchesDiet =
-              hasPersonalizedRankings && hall.dietOptions.includes(userProfile.diet)
-            const matchPercent = hasPersonalizedRankings ? hall.matchPercent ?? 0 : null
-            const hallMenu = menuData[hall.id]
-            const hallMenuItems = flattenMenuItems(hallMenu?.data)
-            const shouldShowFullMenu = showCarousel && spotlightHall?.id === hall.id
-            const menuRows = shouldShowFullMenu
-              ? hallMenuItems
-              : hallMenuItems.slice(0, MAX_MENU_ROWS)
-
-            return (
-              <article
-                key={hall.id}
-                className={[
-                  'hall-card',
-                  standoutHallId === hall.id ? 'hall-card--top' : '',
-                  !hasPersonalizedRankings ? 'hall-card--featured' : '',
-                ]
-                  .filter(Boolean)
-                  .join(' ')}
-              >
-                  <div className="hall-card__header">
-                    <div>
-                      <p className="eyebrow">{hall.area}</p>
-                      <h3>{hall.name}</h3>
-                    </div>
-                    <div
-                      className={`match-chip ${
-                        standoutHallId === hall.id ? 'match-chip--primary' : ''
-                      }`.trim()}
-                    >
-                      {hasPersonalizedRankings ? `${matchPercent}% match` : 'Campus favorite'}
-                    </div>
-                  </div>
-
-                  <p className="hall-desc">{hall.description}</p>
-
-                  <div className="hall-meta">
-                    <div>
-                      <span className="meta-label">Best for</span>
-                      <strong>{hall.goalFocus.map((code) => goalLabelMap[code]).join(' · ')}</strong>
-                    </div>
-                    <div>
-                      <span className="meta-label">Diet ready</span>
-                      <strong>{hall.dietOptions.map((code) => dietLabelMap[code]).join(' · ')}</strong>
-                    </div>
-                  </div>
-
-                  <ul className="highlight-list">
-                    {hall.highlights.map((highlight) => (
-                      <li key={highlight}>{highlight}</li>
-                    ))}
-                  </ul>
-
-                  <div className="menu-section">
-                    <span className="meta-label">Menu snapshot</span>
-                    {!hallMenu && <p className="menu-note">Menu loads when you open this view.</p>}
-                    {hallMenu?.status === 'loading' && (
-                      <p className="menu-note">Pulling today's feed...</p>
-                    )}
-                    {hallMenu?.status === 'error' && (
-                      <p className="menu-note error-text">
-                        Unable to load menu file: {hallMenu.error}
-                      </p>
-                    )}
-                    {hallMenu?.status === 'loaded' && menuRows.length === 0 && (
-                      <p className="menu-note">No menu items listed in the JSON yet.</p>
-                    )}
-                    {hallMenu?.status === 'loaded' && menuRows.length > 0 && (
-                      <div className="menu-table-wrapper">
-                        <table className="menu-table">
-                          <thead>
-                            <tr>
-                              <th>Meal</th>
-                              <th>Station</th>
-                              <th>Item</th>
-                              <th>Calories</th>
-                              <th>Tags</th>
-                              <th>Allergens</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {menuRows.map((row) => (
-                              <tr key={row.id}>
-                                <td>{row.meal}</td>
-                                <td>{row.station}</td>
-                                <td>{row.name}</td>
-                                <td>{row.calories}</td>
-                                <td>{row.tags.length ? row.tags.join(' · ') : '—'}</td>
-                                <td>{row.allergens || 'None listed'}</td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                        <p className="menu-note">
-                          {shouldShowFullMenu
-                            ? `Showing all ${hallMenuItems.length} dishes from the sample feed.`
-                            : `Showing ${menuRows.length} of ${hallMenuItems.length} dishes from the sample feed.`}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {hasPersonalizedRankings && (
-                    <p className="personal-note">
-                      {[
-                        matchesGoal
-                          ? `${goalLabelMap[userProfile.goal]} dishes on rotation`
-                          : null,
-                        matchesDiet
-                          ? `${dietLabelMap[userProfile.diet]} stations ready`
-                          : 'Good fallback option when your go-to is busy',
-                      ]
-                        .filter(Boolean)
-                        .join(' · ')}
-                    </p>
-                  )}
-              </article>
-            )
-          })}
-        </div>
-        </section>
+        <DiningPage
+          isAuthenticated={isAuthenticated}
+          hasPersonalizedRankings={hasPersonalizedRankings}
+          userProfile={userProfile}
+          goalLabelMap={goalLabelMap}
+          dietLabelMap={dietLabelMap}
+          hallCount={hallCount}
+          hallViewMode={hallViewMode}
+          onChangeHallViewMode={changeHallViewMode}
+          showCarousel={showCarousel}
+          spotlightHall={spotlightHall}
+          goToPreviousHall={goToPreviousHall}
+          goToNextHall={goToNextHall}
+          hallSpotlightIndex={hallSpotlightIndex}
+          hallsToRender={hallsToRender}
+          standoutHallId={standoutHallId}
+          menuData={menuData}
+          flattenMenuItems={flattenMenuItems}
+          maxMenuRows={MAX_MENU_ROWS}
+          onBackToPlanner={() => setView('home')}
+          onActivatePersonalization={handleActivatePersonalization}
+        />
       )}
 
       <footer className="footer">
