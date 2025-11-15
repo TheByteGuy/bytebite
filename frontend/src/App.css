@@ -351,10 +351,53 @@
   gap: 0.75rem;
 }
 
+.view-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(96, 43, 125, 0.05);
+  border-radius: 999px;
+  padding: 0.4rem 0.6rem;
+  width: fit-content;
+  margin-bottom: 0.5rem;
+}
+
+.view-toggle span {
+  font-size: 0.85rem;
+  color: #7d6c90;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.view-toggle__buttons {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.toggle-btn {
+  border: none;
+  background: transparent;
+  color: #7d6c90;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.toggle-btn--active {
+  background: white;
+  color: var(--accent-purple);
+  box-shadow: 0 5px 15px rgba(96, 43, 125, 0.15);
+}
+
 .hall-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
+}
+
+.hall-grid--single {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .hall-card {
@@ -370,6 +413,11 @@
 .hall-card--top {
   border-color: var(--accent-pink);
   box-shadow: 0 20px 45px rgba(229, 43, 75, 0.2);
+}
+
+.hall-card--featured {
+  padding: clamp(1.5rem, 4vw, 2.75rem);
+  min-height: 480px;
 }
 
 .hall-card__header {
@@ -450,6 +498,42 @@
   position: absolute;
   left: 0;
   color: var(--accent-pink);
+}
+
+.carousel-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.carousel-button {
+  border: 1px solid rgba(96, 43, 125, 0.3);
+  background: white;
+  border-radius: 999px;
+  padding: 0.45rem 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--accent-purple);
+}
+
+.carousel-status {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  flex: 1;
+  color: #2b1a37;
+}
+
+.carousel-status span {
+  font-size: 0.9rem;
+  color: #7d6c90;
+}
+
+.carousel-status small {
+  font-size: 0.8rem;
+  color: #a496b3;
 }
 
 .menu-section {
