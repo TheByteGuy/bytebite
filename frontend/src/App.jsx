@@ -18,15 +18,8 @@ const dietOptions = [
   { value: 'vegan', label: 'Vegan', description: '100% plant-powered' },
 ]
 
-const goalLabelMap = goalOptions.reduce((acc, option) => {
-  acc[option.value] = option.label
-  return acc
-}, {})
-
-const dietLabelMap = dietOptions.reduce((acc, option) => {
-  acc[option.value] = option.label
-  return acc
-}, {})
+const goalLabelMap = Object.fromEntries(goalOptions.map(o => [o.value, o.label]))
+const dietLabelMap = Object.fromEntries(dietOptions.map(o => [o.value, o.label]))
 
 const diningHalls = [
   {
@@ -34,13 +27,13 @@ const diningHalls = [
     name: 'The Commons Dining Hall',
     area: 'Freshman Hill · 1999 Burdett Ave',
     description:
-      'All-you-care-to-eat buffet anchored by the Simple Zone allergen-free area. Open for the full day so first-years can refuel after labs or late practice.',
+      'All-you-care-to-eat buffet anchored by the Simple Zone allergen-free area.',
     goalFocus: ['maintain', 'gain'],
     dietOptions: ['omnivore', 'vegetarian', 'vegan'],
     highlights: [
       'Simple Zone for nut/gluten-free plates',
       'Continuous service from breakfast to late dinner',
-      'Comfort bowls plus rotating grills for first-year athletes',
+      'Comfort bowls plus rotating grills',
     ],
     signature: 'Primary hub for first-years',
   },
@@ -49,28 +42,27 @@ const diningHalls = [
     name: 'Russell Sage Dining Hall',
     area: 'Central Academic Campus',
     description:
-      'A classic buffet-style hall steps from lecture halls. Balanced plates and plenty of quick grab-and-go options keep central campus residents on schedule.',
+      'Classic buffet-style hall steps from lecture halls.',
     goalFocus: ['lose', 'maintain'],
     dietOptions: ['omnivore', 'vegetarian'],
     highlights: [
-      'Quick salad/soup combos between classes',
+      'Quick salad/soup combos',
       'Comfort food counter & pasta theatre',
-      'Ideal for students living near studio spaces',
+      'Great for central-campus students',
     ],
-    signature: 'Central campus crowd favorite',
+    signature: 'Central campus favorite',
   },
   {
     id: 'barh',
     name: 'BARH Dining Hall',
     area: '100 Albright Ct · Burdett Ave Residence Hall',
-    description:
-      'Buffet-style dining hall known for menus built with student athletes in mind: lean proteins, whole grains, and recovery-friendly snacks.',
+    description: 'Buffet hall built with athletes in mind.',
     goalFocus: ['maintain', 'gain'],
     dietOptions: ['omnivore', 'vegetarian'],
     highlights: [
       'Protein-forward carving station',
-      'Weekend brunch tailored for early practices',
-      'Whole-grain sides and grab-and-go yogurts',
+      'Weekend brunch for early practices',
+      'Whole-grain sides & yogurts',
     ],
     signature: 'Athlete-ready buffet line',
   },
@@ -79,17 +71,18 @@ const diningHalls = [
     name: 'Blitman Dining Hall',
     area: 'Howard N. Blitman Residence Commons',
     description:
-      'Residential hall for ~300 students with a dining room focused on weekday breakfast/dinner and weekend brunch. Cozy atmosphere with vegetarian-friendly stations.',
+      'Cozy hall focused on weekday breakfast/dinner and weekend brunch.',
     goalFocus: ['lose', 'maintain'],
     dietOptions: ['omnivore', 'vegetarian', 'vegan'],
     highlights: [
-      'Weekend brunch omelet bar',
-      'Weekday breakfast before downtown studios',
-      'Small-hall atmosphere with plant-forward bar',
+      'Weekend omelet bar',
+      'Weekday breakfast',
+      'Plant-forward bar',
     ],
-    signature: 'Neighborhood brunch + dinner spot',
+    signature: 'Neighborhood brunch spot',
   },
 ]
+
 const menuFileMap = {
   commons: '/menus/commons.json',
   sage: '/menus/sage.json',
@@ -101,87 +94,56 @@ const MAX_MENU_ROWS = 6
 
 const safeStorage = {
   read() {
-    if (typeof window === 'undefined') return null
     try {
-      const raw = window.localStorage.getItem(STORAGE_KEY)
+      const raw = localStorage.getItem(STORAGE_KEY)
       return raw ? JSON.parse(raw) : null
-    } catch (error) {
-      console.warn('Unable to read saved ByteBite profile.', error)
+    } catch {
       return null
     }
   },
-  write(profile) {
-    if (typeof window === 'undefined') return
+  write(v) {
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(profile))
-    } catch (error) {
-      console.warn('Unable to store ByteBite profile.', error)
-    }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(v))
+    } catch {}
   },
 }
 
 const getMatchScore = (hall, profile) => {
   if (!profile) return 0
   let score = 0
-  if (hall.goalFocus.includes(profile.goal)) {
-    score += 3
-  }
 
-  if (profile.diet === 'omnivore') {
-    score += 1
-  } else if (hall.dietOptions.includes(profile.diet)) {
-    score += 3
-  }
-
-  const hasFullPlantSupport = hall.dietOptions.includes('vegan')
-  if (profile.diet === 'vegan' && hasFullPlantSupport) {
-    score += 2
-  }
-
-  if (profile.goal === 'gain' && hall.goalFocus.includes('gain')) {
-    score += 1
-  }
+  if (hall.goalFocus.includes(profile.goal)) score += 3
+  if (profile.diet === 'omnivore') score += 1
+  else if (hall.dietOptions.includes(profile.diet)) score += 3
+  if (profile.diet === 'vegan' && hall.dietOptions.includes('vegan')) score += 2
+  if (profile.goal === 'gain' && hall.goalFocus.includes('gain')) score += 1
 
   return Math.min(score, MAX_MATCH_SCORE)
 }
 
 const buildDietTags = (item = {}) => {
   const tags = []
-  if (item.isVegan) {
-    tags.push('Vegan')
-  } else if (item.isVegetarian) {
-    tags.push('Vegetarian')
-  }
-
-  if (item.isPlantBased) {
-    tags.push('Plant-based')
-  }
-
-  if (item.isMindful) {
-    tags.push('Mindful')
-  }
-
+  if (item.isVegan) tags.push('Vegan')
+  else if (item.isVegetarian) tags.push('Vegetarian')
+  if (item.isPlantBased) tags.push('Plant-based')
+  if (item.isMindful) tags.push('Mindful')
   return tags
 }
 
-const stringifyAllergens = (allergens = []) => {
-  if (!Array.isArray(allergens) || allergens.length === 0) return ''
-  return allergens
-    .map((allergen) => allergen?.name)
-    .filter(Boolean)
-    .join(', ')
-}
+const stringifyAllergens = (allergens = []) =>
+  Array.isArray(allergens)
+    ? allergens.map(a => a?.name).filter(Boolean).join(', ')
+    : ''
 
 const flattenMenuItems = (rawMenu) => {
   if (!rawMenu) return []
   const meals = Array.isArray(rawMenu) ? rawMenu : rawMenu?.meals ?? []
   const rows = []
-
   meals.forEach((meal) => {
     meal?.groups?.forEach((group) => {
       group?.items?.forEach((item, idx) => {
         rows.push({
-          id: `${meal?.name || 'Meal'}-${group?.name || 'Group'}-${item?.menuItemId || idx}`,
+          id: `${meal?.name}-${group?.name}-${item?.menuItemId || idx}`,
           meal: meal?.name || 'Meal',
           station: group?.name || 'Station',
           name: item?.formalName || item?.description || 'Menu item',
@@ -192,69 +154,41 @@ const flattenMenuItems = (rawMenu) => {
       })
     })
   })
-
   return rows
 }
 
 function App() {
   const [view, setView] = useState('home')
-  const [authMode, setAuthMode] = useState('signup')
+
   const [signupForm, setSignupForm] = useState({
     name: '',
-    email: '',
-    password: '',
     goal: 'maintain',
     diet: 'omnivore',
+    allergies: [],
   })
-  const [loginForm, setLoginForm] = useState({ email: '', password: '' })
+
   const [userProfile, setUserProfile] = useState(null)
-  const [storedPreferences, setStoredPreferences] = useState(null)
-  const [personalizationUnlocked, setPersonalizationUnlocked] = useState(false)
   const [feedback, setFeedback] = useState('')
-  const [authError, setAuthError] = useState('')
   const [menuData, setMenuData] = useState({})
   const menuDataRef = useRef(menuData)
+
   const [hallSpotlightIndex, setHallSpotlightIndex] = useState(0)
-  const [hallViewMode, setHallViewMode] = useState('carousel') // 'carousel' | 'grid'
+  const [hallViewMode, setHallViewMode] = useState('carousel')
 
   const persistPreferences = (profile) => {
-    setStoredPreferences(profile)
     safeStorage.write(profile)
+    setUserProfile(profile)
   }
 
   useEffect(() => {
     const saved = safeStorage.read()
-    if (!saved) return
-
-    persistPreferences(saved)
-    setPersonalizationUnlocked(Boolean(saved.personalizationUnlocked))
-    setSignupForm((prev) => ({
-      ...prev,
-      name: saved.name || prev.name,
-      email: saved.email || prev.email,
-      goal: saved.goal || prev.goal,
-      diet: saved.diet || prev.diet,
-    }))
-    setLoginForm((prev) => ({ ...prev, email: saved.email || prev.email }))
-
-    if (saved.goal && saved.diet) {
-      setUserProfile({ ...saved, isAuthenticated: true })
-      if (saved.personalizationUnlocked) {
-        setFeedback(
-          `Welcome back, ${saved.name?.split(' ')[0] || 'ByteBiter'}! Your plan is ready.`,
-        )
-        setView('dining')
-      } else {
-        setFeedback(
-          `Welcome back, ${saved.name?.split(' ')[0] || 'ByteBiter'}! Personalize your rankings when you're ready.`,
-        )
-      }
+    if (saved) {
+      setUserProfile(saved)
+      setSignupForm(saved)
+      setFeedback(`Welcome back, ${saved.name.split(' ')[0]}!`)
+      setView('dining')
     }
   }, [])
-
-  useEffect(() => {
-    setAuthError('')
-  }, [authMode])
 
   useEffect(() => {
     menuDataRef.current = menuData
@@ -262,295 +196,114 @@ function App() {
 
   useEffect(() => {
     if (view !== 'dining') return
-    const pendingHalls = diningHalls.filter((hall) => !menuDataRef.current[hall.id])
-    if (pendingHalls.length === 0) return
-    let cancelled = false
-
-    pendingHalls.forEach((hall) => {
-      setMenuData((prev) => ({
-        ...prev,
-        [hall.id]: { status: 'loading' },
-      }))
-
+    const pending = diningHalls.filter((h) => !menuDataRef.current[h.id])
+    pending.forEach((hall) => {
+      setMenuData((p) => ({ ...p, [hall.id]: { status: 'loading' } }))
       fetch(menuFileMap[hall.id])
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error('Menu not available')
-          }
-          return response.json()
-        })
-        .then((data) => {
-          if (cancelled) return
-          setMenuData((prev) => ({
-            ...prev,
-            [hall.id]: { status: 'loaded', data },
-          }))
-        })
-        .catch((error) => {
-          if (cancelled) return
-          setMenuData((prev) => ({
-            ...prev,
-            [hall.id]: { status: 'error', error: error.message },
-          }))
-        })
+        .then(r => r.json())
+        .then((data) =>
+          setMenuData((p) => ({ ...p, [hall.id]: { status: 'loaded', data } }))
+        )
+        .catch(() =>
+          setMenuData((p) => ({ ...p, [hall.id]: { status: 'error' } }))
+        )
     })
-
-    return () => {
-      cancelled = true
-    }
   }, [view])
 
   const isAuthenticated = Boolean(userProfile)
-  const hasPersonalizedRankings = isAuthenticated && personalizationUnlocked
+  const hasPersonalizedRankings = Boolean(userProfile)
 
-  useEffect(() => {
-    if (view !== 'dining') return
-    setHallSpotlightIndex(0)
-    if (!hasPersonalizedRankings) {
-      setHallViewMode('carousel')
+  const updateSignupField = (field, value) =>
+    setSignupForm((prev) => ({ ...prev, [field]: value }))
+
+  const handleSavePreferences = (event) => {
+    event.preventDefault()
+    const trimmedName = signupForm.name.trim() || 'ByteBiter'
+
+    const profile = {
+      name: trimmedName,
+      goal: signupForm.goal,
+      diet: signupForm.diet,
+      allergies: signupForm.allergies || [],
     }
-  }, [hasPersonalizedRankings, view])
+
+    persistPreferences(profile)
+    setFeedback(`Preferences saved! Welcome, ${trimmedName.split(' ')[0]}!`)
+    setView('dining')
+  }
 
   const hallRankings = useMemo(() => {
-    const baseList = diningHalls.map((hall) => {
-      if (!hasPersonalizedRankings) {
-        return { ...hall, score: null, matchPercent: null }
-      }
+    if (!userProfile) return diningHalls
+    return diningHalls.map((hall) => {
       const score = getMatchScore(hall, userProfile)
       return { ...hall, score }
     })
+  }, [userProfile])
 
-    if (!hasPersonalizedRankings) {
-      return baseList
-    }
-
-    const totalScore = baseList.reduce((sum, hall) => sum + (hall.score ?? 0), 0)
-    const withPercent = baseList.map((hall) => {
-      const percent =
-        totalScore > 0 ? Math.round(((hall.score ?? 0) / totalScore) * 100) : 0
-      return { ...hall, matchPercent: percent }
-    })
-    const percentSum = withPercent.reduce((sum, hall) => sum + (hall.matchPercent ?? 0), 0)
-    if (totalScore > 0 && percentSum !== 100 && withPercent.length > 0) {
-      withPercent[0] = {
-        ...withPercent[0],
-        matchPercent: (withPercent[0].matchPercent ?? 0) + (100 - percentSum),
-      }
-    }
-    return withPercent
-  }, [hasPersonalizedRankings, userProfile])
-
-  const hallDisplayList = useMemo(() => {
-    if (!hasPersonalizedRankings) return hallRankings
-    return [...hallRankings].sort((first, second) => (second.score ?? 0) - (first.score ?? 0))
-  }, [hallRankings, hasPersonalizedRankings])
-
-  const baseHallList = hasPersonalizedRankings ? hallDisplayList : hallRankings
-  const hallCount = baseHallList.length
-
-  useEffect(() => {
-    if (hallCount === 0) {
-      setHallSpotlightIndex(0)
-      return
-    }
-    setHallSpotlightIndex((prev) => prev % hallCount)
-  }, [hallCount])
-
-  const standoutHallId = hasPersonalizedRankings ? hallDisplayList[0]?.id : null
+  const hallDisplayList = [...hallRankings].sort((a, b) => b.score - a.score)
+  const hallCount = hallDisplayList.length
   const showCarousel = hallViewMode === 'carousel'
-  const spotlightHall =
-    showCarousel && hallCount > 0 ? baseHallList[hallSpotlightIndex % hallCount] : null
-  const hallsToRender = showCarousel
-    ? spotlightHall
-      ? [spotlightHall]
-      : []
-    : baseHallList
-
-  const goToPreviousHall = () => {
-    if (!hallCount) return
-    setHallSpotlightIndex((prev) => (prev - 1 + hallCount) % hallCount)
-  }
-
-  const goToNextHall = () => {
-    if (!hallCount) return
-    setHallSpotlightIndex((prev) => (prev + 1) % hallCount)
-  }
-
-  const changeHallViewMode = (mode) => {
-    setHallViewMode(mode)
-  }
-
-  const updateSignupField = (field, value) => {
-    setSignupForm((prev) => ({ ...prev, [field]: value }))
-  }
-
-  const handleSignupSubmit = (event) => {
-    event.preventDefault()
-    setAuthError('')
-    const trimmedName = signupForm.name.trim() || 'ByteBiter'
-    const profileToPersist = {
-      name: trimmedName,
-      email: signupForm.email.trim(),
-      password: signupForm.password,
-      goal: signupForm.goal,
-      diet: signupForm.diet,
-      personalizationUnlocked: false,
-    }
-
-    persistPreferences(profileToPersist)
-    setPersonalizationUnlocked(false)
-    setUserProfile({ ...profileToPersist, isAuthenticated: true })
-    setFeedback(
-      `Welcome, ${trimmedName.split(' ')[0]}! Click "Personalize my rankings" whenever you're ready.`,
-    )
-    setView('dining')
-  }
-
-  const handleLoginSubmit = (event) => {
-    event.preventDefault()
-    setAuthError('')
-    if (!storedPreferences) {
-      setAuthError('No saved plan yet. Create one with Sign Up.')
-      return
-    }
-
-    const emailMatches =
-      storedPreferences.email.trim().toLowerCase() === loginForm.email.trim().toLowerCase()
-    const passwordMatches = storedPreferences.password === loginForm.password
-
-    if (!emailMatches || !passwordMatches) {
-      setAuthError('Email or password does not match your saved plan.')
-      return
-    }
-
-    const personalizationReady = Boolean(storedPreferences.personalizationUnlocked)
-    setPersonalizationUnlocked(personalizationReady)
-    setUserProfile({ ...storedPreferences, isAuthenticated: true })
-    setFeedback(
-      personalizationReady
-        ? `Welcome back, ${storedPreferences.name?.split(' ')[0] || 'ByteBiter'}! Your rankings are ready.`
-        : `Welcome back, ${storedPreferences.name?.split(' ')[0] || 'ByteBiter'}! Tap "Personalize my rankings" to see your lineup.`,
-    )
-    setView('dining')
-  }
-
-  const handleSignOut = () => {
-    setUserProfile(null)
-    setPersonalizationUnlocked(false)
-    setFeedback('Signed out. You can still explore the campus halls without personalization.')
-    setView('home')
-  }
-
-  const handleActivatePersonalization = () => {
-    if (!isAuthenticated || hasPersonalizedRankings) return
-
-    const sourceProfile = storedPreferences || userProfile
-    if (sourceProfile) {
-      const { isAuthenticated: _ignored, ...profileData } = sourceProfile
-      const updatedProfile = { ...profileData, personalizationUnlocked: true }
-      persistPreferences(updatedProfile)
-      setUserProfile((prev) =>
-        prev ? { ...prev, personalizationUnlocked: true, isAuthenticated: true } : prev,
-      )
-    }
-
-    setPersonalizationUnlocked(true)
-    setFeedback('Personalized rankings activated. Enjoy your tailored lineup!')
-  }
-
-  const heroPreview = diningHalls.slice(0, 3)
+  const spotlightHall = hallDisplayList[hallSpotlightIndex % hallCount]
+  const hallsToRender = showCarousel ? [spotlightHall] : hallDisplayList
+  const standoutHallId = hallDisplayList[0]?.id
 
   return (
     <div className="app-shell">
       <nav className="top-nav">
         <div className="brand">
-          <div id="logo">
-            <img src="/ByteBiteOfficialv1.png" alt="ByteBite Logo"/>
-          </div>
+          <img src="/ByteBiteOfficialv1.png" id="logo" />
           <div>
             <p className="eyebrow">ByteBite</p>
             <strong>Campus Fuel Planner</strong>
           </div>
         </div>
+
         <div className="nav-actions">
           <button
             className={view === 'home' ? 'ghost-button ghost-button--active' : 'ghost-button'}
             onClick={() => setView('home')}
-            type="button"
           >
             Planner
           </button>
+
           <button
             className={view === 'dining' ? 'ghost-button ghost-button--active' : 'ghost-button'}
             onClick={() => setView('dining')}
-            type="button"
           >
             Dining Halls
           </button>
-          {isAuthenticated && (
-            <button className="ghost-button danger" onClick={handleSignOut} type="button">
-              Sign out
-            </button>
-          )}
         </div>
       </nav>
 
       {feedback && (
         <div className="inline-banner">
           <span>{feedback}</span>
-          <button type="button" onClick={() => setFeedback('')} aria-label="Dismiss message">
-            ×
-          </button>
+          <button onClick={() => setFeedback('')}>×</button>
         </div>
       )}
 
       <header className="hero">
         <div>
           <p className="eyebrow">Build a smarter dining routine</p>
-          <h1>Sign up, choose your goals, and we rank campus dining for you.</h1>
+          <h1>Save your goals and diet—get instant personalized rankings.</h1>
           <p className="hero-copy">
-            Tell us if you’re cutting, maintaining, or bulking and whether you’re vegetarian or
-            vegan. ByteBite keeps a personalized scorecard ready every time you log in.
+            ByteBite ranks every dining hall based on your goals and dietary style as soon as you save your preferences.
           </p>
           <div className="hero-cta">
-            <button className="primary" type="button" onClick={() => setView('home')}>
-              Start planning
-            </button>
-            <button className="secondary" type="button" onClick={() => setView('dining')}>
-              See dining halls
-            </button>
+            <button className="primary" onClick={() => setView('home')}>Start planning</button>
+            <button className="secondary" onClick={() => setView('dining')}>See dining halls</button>
           </div>
         </div>
-        <ul className="stat-list">
-          <li>
-            <strong>3 goals</strong>
-            <span>Lose · Maintain · Gain</span>
-          </li>
-          <li>
-            <strong>Vegan & vegetarian</strong>
-            <span>Flagged in every ranking</span>
-          </li>
-          <li>
-            <strong>4 dining halls</strong>
-            <span>Main RPI spots ranked instantly</span>
-          </li>
-        </ul>
       </header>
 
       {view === 'home' && (
         <HomePage
-          authMode={authMode}
-          setAuthMode={setAuthMode}
           signupForm={signupForm}
-          loginForm={loginForm}
           updateSignupField={updateSignupField}
-          setLoginForm={setLoginForm}
-          handleSignupSubmit={handleSignupSubmit}
-          handleLoginSubmit={handleLoginSubmit}
-          authError={authError}
+          handleSavePreferences={handleSavePreferences}
           goalOptions={goalOptions}
           dietOptions={dietOptions}
-          heroPreview={heroPreview}
+          heroPreview={diningHalls.slice(0, 3)}
           onNavigateToDining={() => setView('dining')}
         />
       )}
@@ -564,11 +317,11 @@ function App() {
           dietLabelMap={dietLabelMap}
           hallCount={hallCount}
           hallViewMode={hallViewMode}
-          onChangeHallViewMode={changeHallViewMode}
+          onChangeHallViewMode={setHallViewMode}
           showCarousel={showCarousel}
           spotlightHall={spotlightHall}
-          goToPreviousHall={goToPreviousHall}
-          goToNextHall={goToNextHall}
+          goToPreviousHall={() => setHallSpotlightIndex((i) => (i - 1 + hallCount) % hallCount)}
+          goToNextHall={() => setHallSpotlightIndex((i) => (i + 1) % hallCount)}
           hallSpotlightIndex={hallSpotlightIndex}
           hallsToRender={hallsToRender}
           standoutHallId={standoutHallId}
@@ -576,7 +329,7 @@ function App() {
           flattenMenuItems={flattenMenuItems}
           maxMenuRows={MAX_MENU_ROWS}
           onBackToPlanner={() => setView('home')}
-          onActivatePersonalization={handleActivatePersonalization}
+          onActivatePersonalization={() => {}}
         />
       )}
 
