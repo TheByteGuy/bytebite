@@ -211,17 +211,29 @@ function App() {
   const [authError, setAuthError] = useState('')
   const [menuData, setMenuData] = useState({})
   const menuDataRef = useRef(menuData)
+  const [hallSpotlightIndex, setHallSpotlightIndex] = useState(0)
+  const [hallViewMode, setHallViewMode] = useState('carousel') // 'carousel' | 'grid'
 
   useEffect(() => {
     const saved = safeStorage.read()
-    if (saved) {
-      setStoredPreferences(saved)
-      setSignupForm((prev) => ({
-        ...prev,
-        name: saved.name || prev.name,
-        email: saved.email || prev.email,
-      }))
-      setLoginForm((prev) => ({ ...prev, email: saved.email || prev.email }))
+    if (!saved) return
+
+    setStoredPreferences(saved)
+    setSignupForm((prev) => ({
+      ...prev,
+      name: saved.name || prev.name,
+      email: saved.email || prev.email,
+      goal: saved.goal || prev.goal,
+      diet: saved.diet || prev.diet,
+    }))
+    setLoginForm((prev) => ({ ...prev, email: saved.email || prev.email }))
+
+    if (saved.goal && saved.diet) {
+      setUserProfile({ ...saved, isAuthenticated: true })
+      setFeedback(
+        `Welcome back, ${saved.name?.split(' ')[0] || 'ByteBiter'}! Your plan is ready.`,
+      )
+      setView('dining')
     }
   }, [])
 
@@ -275,13 +287,41 @@ function App() {
 
   const isAuthenticated = Boolean(userProfile)
 
+  useEffect(() => {
+    if (view !== 'dining') return
+    setHallSpotlightIndex(0)
+    if (!isAuthenticated) {
+      setHallViewMode('carousel')
+    }
+  }, [isAuthenticated, view])
+
   const hallRankings = useMemo(() => {
-    return diningHalls.map((hall) => {
+    const baseList = diningHalls.map((hall) => {
       if (!isAuthenticated) {
-        return { ...hall, score: null }
+        return { ...hall, score: null, matchPercent: null }
       }
-      return { ...hall, score: getMatchScore(hall, userProfile) }
+      const score = getMatchScore(hall, userProfile)
+      return { ...hall, score }
     })
+
+    if (!isAuthenticated) {
+      return baseList
+    }
+
+    const totalScore = baseList.reduce((sum, hall) => sum + (hall.score ?? 0), 0)
+    const withPercent = baseList.map((hall) => {
+      const percent =
+        totalScore > 0 ? Math.round(((hall.score ?? 0) / totalScore) * 100) : 0
+      return { ...hall, matchPercent: percent }
+    })
+    const percentSum = withPercent.reduce((sum, hall) => sum + (hall.matchPercent ?? 0), 0)
+    if (totalScore > 0 && percentSum !== 100 && withPercent.length > 0) {
+      withPercent[0] = {
+        ...withPercent[0],
+        matchPercent: (withPercent[0].matchPercent ?? 0) + (100 - percentSum),
+      }
+    }
+    return withPercent
   }, [isAuthenticated, userProfile])
 
   const hallDisplayList = useMemo(() => {
@@ -289,7 +329,40 @@ function App() {
     return [...hallRankings].sort((first, second) => (second.score ?? 0) - (first.score ?? 0))
   }, [hallRankings, isAuthenticated])
 
+  const baseHallList = isAuthenticated ? hallDisplayList : hallRankings
+  const hallCount = baseHallList.length
+
+  useEffect(() => {
+    if (hallCount === 0) {
+      setHallSpotlightIndex(0)
+      return
+    }
+    setHallSpotlightIndex((prev) => prev % hallCount)
+  }, [hallCount])
+
   const standoutHallId = isAuthenticated ? hallDisplayList[0]?.id : null
+  const showCarousel = hallViewMode === 'carousel'
+  const spotlightHall =
+    showCarousel && hallCount > 0 ? baseHallList[hallSpotlightIndex % hallCount] : null
+  const hallsToRender = showCarousel
+    ? spotlightHall
+      ? [spotlightHall]
+      : []
+    : baseHallList
+
+  const goToPreviousHall = () => {
+    if (!hallCount) return
+    setHallSpotlightIndex((prev) => (prev - 1 + hallCount) % hallCount)
+  }
+
+  const goToNextHall = () => {
+    if (!hallCount) return
+    setHallSpotlightIndex((prev) => (prev + 1) % hallCount)
+  }
+
+  const changeHallViewMode = (mode) => {
+    setHallViewMode(mode)
+  }
 
   const updateSignupField = (field, value) => {
     setSignupForm((prev) => ({ ...prev, [field]: value }))
@@ -367,7 +440,9 @@ function App() {
     <div className="app-shell">
       <nav className="top-nav">
         <div className="brand">
-          <span className="logo-dot" aria-hidden="true" />
+          <div id="logo">
+            <img src="/ByteBiteOfficialv1.png" alt="ByteBite Logo"/>
+          </div>
           <div>
             <p className="eyebrow">ByteBite</p>
             <strong>Campus Fuel Planner</strong>
@@ -603,23 +678,82 @@ function App() {
             </div>
           </div>
 
-          <div className="hall-grid">
-            {hallDisplayList.map((hall) => {
+        {hallCount > 0 && (
+          <div className="view-toggle">
+            <span>View style:</span>
+            <div className="view-toggle__buttons">
+              <button
+                type="button"
+                className={
+                  hallViewMode === 'carousel' ? 'toggle-btn toggle-btn--active' : 'toggle-btn'
+                }
+                onClick={() => changeHallViewMode('carousel')}
+              >
+                Spotlight
+              </button>
+              <button
+                type="button"
+                className={
+                  hallViewMode === 'grid' ? 'toggle-btn toggle-btn--active' : 'toggle-btn'
+                }
+                onClick={() => changeHallViewMode('grid')}
+              >
+                All halls
+              </button>
+            </div>
+          </div>
+        )}
+
+        {showCarousel && spotlightHall && (
+          <div className="carousel-controls">
+            <button
+              type="button"
+              className="carousel-button"
+              onClick={goToPreviousHall}
+              aria-label="Show previous dining hall"
+            >
+              Prev
+            </button>
+            <div className="carousel-status">
+              <strong>{spotlightHall.name}</strong>
+              <span>{spotlightHall.area}</span>
+              <small>
+                {hallSpotlightIndex + 1}/{hallCount}
+              </small>
+            </div>
+            <button
+              type="button"
+              className="carousel-button"
+              onClick={goToNextHall}
+              aria-label="Show next dining hall"
+            >
+              Next
+            </button>
+          </div>
+        )}
+
+        <div className={showCarousel ? 'hall-grid hall-grid--single' : 'hall-grid'}>
+            {hallsToRender.map((hall) => {
               const matchesGoal = isAuthenticated && hall.goalFocus.includes(userProfile.goal)
               const matchesDiet = isAuthenticated && hall.dietOptions.includes(userProfile.diet)
-              const matchPercent = isAuthenticated
-                ? Math.round(((hall.score ?? 0) / MAX_MATCH_SCORE) * 100)
-                : null
+              const matchPercent = isAuthenticated ? hall.matchPercent ?? 0 : null
               const hallMenu = menuData[hall.id]
               const hallMenuItems = flattenMenuItems(hallMenu?.data)
-              const menuRows = hallMenuItems.slice(0, MAX_MENU_ROWS)
+              const shouldShowFullMenu = showCarousel && spotlightHall?.id === hall.id
+              const menuRows = shouldShowFullMenu
+                ? hallMenuItems
+                : hallMenuItems.slice(0, MAX_MENU_ROWS)
 
               return (
                 <article
                   key={hall.id}
-                  className={`hall-card ${
-                    standoutHallId === hall.id ? 'hall-card--top' : ''
-                  }`.trim()}
+                  className={[
+                    'hall-card',
+                    standoutHallId === hall.id ? 'hall-card--top' : '',
+                    !isAuthenticated ? 'hall-card--featured' : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
                 >
                   <div className="hall-card__header">
                     <div>
@@ -695,8 +829,9 @@ function App() {
                           </tbody>
                         </table>
                         <p className="menu-note">
-                          Showing {menuRows.length} of {hallMenuItems.length} dishes from the sample
-                          feed.
+                          {shouldShowFullMenu
+                            ? `Showing all ${hallMenuItems.length} dishes from the sample feed.`
+                            : `Showing ${menuRows.length} of ${hallMenuItems.length} dishes from the sample feed.`}
                         </p>
                       </div>
                     )}
