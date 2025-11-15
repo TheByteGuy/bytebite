@@ -207,6 +207,7 @@ function App() {
   const [loginForm, setLoginForm] = useState({ email: '', password: '' })
   const [userProfile, setUserProfile] = useState(null)
   const [storedPreferences, setStoredPreferences] = useState(null)
+  const [personalizationUnlocked, setPersonalizationUnlocked] = useState(false)
   const [feedback, setFeedback] = useState('')
   const [authError, setAuthError] = useState('')
   const [menuData, setMenuData] = useState({})
@@ -214,11 +215,17 @@ function App() {
   const [hallSpotlightIndex, setHallSpotlightIndex] = useState(0)
   const [hallViewMode, setHallViewMode] = useState('carousel') // 'carousel' | 'grid'
 
+  const persistPreferences = (profile) => {
+    setStoredPreferences(profile)
+    safeStorage.write(profile)
+  }
+
   useEffect(() => {
     const saved = safeStorage.read()
     if (!saved) return
 
-    setStoredPreferences(saved)
+    persistPreferences(saved)
+    setPersonalizationUnlocked(Boolean(saved.personalizationUnlocked))
     setSignupForm((prev) => ({
       ...prev,
       name: saved.name || prev.name,
@@ -230,10 +237,16 @@ function App() {
 
     if (saved.goal && saved.diet) {
       setUserProfile({ ...saved, isAuthenticated: true })
-      setFeedback(
-        `Welcome back, ${saved.name?.split(' ')[0] || 'ByteBiter'}! Your plan is ready.`,
-      )
-      setView('dining')
+      if (saved.personalizationUnlocked) {
+        setFeedback(
+          `Welcome back, ${saved.name?.split(' ')[0] || 'ByteBiter'}! Your plan is ready.`,
+        )
+        setView('dining')
+      } else {
+        setFeedback(
+          `Welcome back, ${saved.name?.split(' ')[0] || 'ByteBiter'}! Personalize your rankings when you're ready.`,
+        )
+      }
     }
   }, [])
 
@@ -286,25 +299,26 @@ function App() {
   }, [view])
 
   const isAuthenticated = Boolean(userProfile)
+  const hasPersonalizedRankings = isAuthenticated && personalizationUnlocked
 
   useEffect(() => {
     if (view !== 'dining') return
     setHallSpotlightIndex(0)
-    if (!isAuthenticated) {
+    if (!hasPersonalizedRankings) {
       setHallViewMode('carousel')
     }
-  }, [isAuthenticated, view])
+  }, [hasPersonalizedRankings, view])
 
   const hallRankings = useMemo(() => {
     const baseList = diningHalls.map((hall) => {
-      if (!isAuthenticated) {
+      if (!hasPersonalizedRankings) {
         return { ...hall, score: null, matchPercent: null }
       }
       const score = getMatchScore(hall, userProfile)
       return { ...hall, score }
     })
 
-    if (!isAuthenticated) {
+    if (!hasPersonalizedRankings) {
       return baseList
     }
 
@@ -322,14 +336,14 @@ function App() {
       }
     }
     return withPercent
-  }, [isAuthenticated, userProfile])
+  }, [hasPersonalizedRankings, userProfile])
 
   const hallDisplayList = useMemo(() => {
-    if (!isAuthenticated) return hallRankings
+    if (!hasPersonalizedRankings) return hallRankings
     return [...hallRankings].sort((first, second) => (second.score ?? 0) - (first.score ?? 0))
-  }, [hallRankings, isAuthenticated])
+  }, [hallRankings, hasPersonalizedRankings])
 
-  const baseHallList = isAuthenticated ? hallDisplayList : hallRankings
+  const baseHallList = hasPersonalizedRankings ? hallDisplayList : hallRankings
   const hallCount = baseHallList.length
 
   useEffect(() => {
@@ -340,7 +354,7 @@ function App() {
     setHallSpotlightIndex((prev) => prev % hallCount)
   }, [hallCount])
 
-  const standoutHallId = isAuthenticated ? hallDisplayList[0]?.id : null
+  const standoutHallId = hasPersonalizedRankings ? hallDisplayList[0]?.id : null
   const showCarousel = hallViewMode === 'carousel'
   const spotlightHall =
     showCarousel && hallCount > 0 ? baseHallList[hallSpotlightIndex % hallCount] : null
@@ -378,13 +392,14 @@ function App() {
       password: signupForm.password,
       goal: signupForm.goal,
       diet: signupForm.diet,
+      personalizationUnlocked: false,
     }
 
-    safeStorage.write(profileToPersist)
-    setStoredPreferences(profileToPersist)
+    persistPreferences(profileToPersist)
+    setPersonalizationUnlocked(false)
     setUserProfile({ ...profileToPersist, isAuthenticated: true })
     setFeedback(
-      `Welcome, ${trimmedName.split(' ')[0]}! We’ll focus on ${goalLabelMap[signupForm.goal].toLowerCase()}.`,
+      `Welcome, ${trimmedName.split(' ')[0]}! Click "Personalize my rankings" whenever you're ready.`,
     )
     setView('dining')
   }
@@ -406,15 +421,39 @@ function App() {
       return
     }
 
+    const personalizationReady = Boolean(storedPreferences.personalizationUnlocked)
+    setPersonalizationUnlocked(personalizationReady)
     setUserProfile({ ...storedPreferences, isAuthenticated: true })
-    setFeedback(`Welcome back, ${storedPreferences.name?.split(' ')[0] || 'ByteBiter'}!`)
+    setFeedback(
+      personalizationReady
+        ? `Welcome back, ${storedPreferences.name?.split(' ')[0] || 'ByteBiter'}! Your rankings are ready.`
+        : `Welcome back, ${storedPreferences.name?.split(' ')[0] || 'ByteBiter'}! Tap "Personalize my rankings" to see your lineup.`,
+    )
     setView('dining')
   }
 
   const handleSignOut = () => {
     setUserProfile(null)
+    setPersonalizationUnlocked(false)
     setFeedback('Signed out. You can still explore the campus halls without personalization.')
     setView('home')
+  }
+
+  const handleActivatePersonalization = () => {
+    if (!isAuthenticated || hasPersonalizedRankings) return
+
+    const sourceProfile = storedPreferences || userProfile
+    if (sourceProfile) {
+      const { isAuthenticated: _ignored, ...profileData } = sourceProfile
+      const updatedProfile = { ...profileData, personalizationUnlocked: true }
+      persistPreferences(updatedProfile)
+      setUserProfile((prev) =>
+        prev ? { ...prev, personalizationUnlocked: true, isAuthenticated: true } : prev,
+      )
+    }
+
+    setPersonalizationUnlocked(true)
+    setFeedback('Personalized rankings activated. Enjoy your tailored lineup!')
   }
 
   const heroPreview = diningHalls.slice(0, 3)
@@ -654,15 +693,19 @@ function App() {
             <div>
               <p className="eyebrow">Dining Explorer</p>
               <h2>
-                {isAuthenticated
+                {hasPersonalizedRankings
                   ? `${userProfile.name.split(' ')[0]}'s personalized lineup`
+                  : isAuthenticated
+                  ? 'Neutral campus lineup — signed in'
                   : 'Neutral campus lineup'}
               </h2>
               <p>
-                {isAuthenticated
+                {hasPersonalizedRankings
                   ? `Ranked using your ${goalLabelMap[userProfile.goal].toLowerCase()} goal and ${dietLabelMap[userProfile.diet]
                       .toLowerCase()
                       .replace('no preference', 'omnivore preference')}.`
+                  : isAuthenticated
+                  ? 'You are signed in. Tap “Personalize my rankings” to generate your tailored order.'
                   : 'Sign up or log in to sort these halls by your goals and dietary choices.'}
               </p>
             </div>
@@ -670,8 +713,8 @@ function App() {
               <button className="ghost-button" type="button" onClick={() => setView('home')}>
                 Back to planner
               </button>
-              {!isAuthenticated && (
-                <button className="primary" type="button" onClick={() => setAuthMode('signup')}>
+              {isAuthenticated && !hasPersonalizedRankings && (
+                <button className="primary" type="button" onClick={handleActivatePersonalization}>
                   Personalize my rankings
                 </button>
               )}
@@ -733,28 +776,30 @@ function App() {
         )}
 
         <div className={showCarousel ? 'hall-grid hall-grid--single' : 'hall-grid'}>
-            {hallsToRender.map((hall) => {
-              const matchesGoal = isAuthenticated && hall.goalFocus.includes(userProfile.goal)
-              const matchesDiet = isAuthenticated && hall.dietOptions.includes(userProfile.diet)
-              const matchPercent = isAuthenticated ? hall.matchPercent ?? 0 : null
-              const hallMenu = menuData[hall.id]
-              const hallMenuItems = flattenMenuItems(hallMenu?.data)
-              const shouldShowFullMenu = showCarousel && spotlightHall?.id === hall.id
-              const menuRows = shouldShowFullMenu
-                ? hallMenuItems
-                : hallMenuItems.slice(0, MAX_MENU_ROWS)
+          {hallsToRender.map((hall) => {
+            const matchesGoal =
+              hasPersonalizedRankings && hall.goalFocus.includes(userProfile.goal)
+            const matchesDiet =
+              hasPersonalizedRankings && hall.dietOptions.includes(userProfile.diet)
+            const matchPercent = hasPersonalizedRankings ? hall.matchPercent ?? 0 : null
+            const hallMenu = menuData[hall.id]
+            const hallMenuItems = flattenMenuItems(hallMenu?.data)
+            const shouldShowFullMenu = showCarousel && spotlightHall?.id === hall.id
+            const menuRows = shouldShowFullMenu
+              ? hallMenuItems
+              : hallMenuItems.slice(0, MAX_MENU_ROWS)
 
-              return (
-                <article
-                  key={hall.id}
-                  className={[
-                    'hall-card',
-                    standoutHallId === hall.id ? 'hall-card--top' : '',
-                    !isAuthenticated ? 'hall-card--featured' : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                >
+            return (
+              <article
+                key={hall.id}
+                className={[
+                  'hall-card',
+                  standoutHallId === hall.id ? 'hall-card--top' : '',
+                  !hasPersonalizedRankings ? 'hall-card--featured' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+              >
                   <div className="hall-card__header">
                     <div>
                       <p className="eyebrow">{hall.area}</p>
@@ -765,7 +810,7 @@ function App() {
                         standoutHallId === hall.id ? 'match-chip--primary' : ''
                       }`.trim()}
                     >
-                      {isAuthenticated ? `${matchPercent}% match` : 'Campus favorite'}
+                      {hasPersonalizedRankings ? `${matchPercent}% match` : 'Campus favorite'}
                     </div>
                   </div>
 
@@ -837,7 +882,7 @@ function App() {
                     )}
                   </div>
 
-                  {isAuthenticated && (
+                  {hasPersonalizedRankings && (
                     <p className="personal-note">
                       {[
                         matchesGoal
@@ -851,10 +896,10 @@ function App() {
                         .join(' · ')}
                     </p>
                   )}
-                </article>
-              )
-            })}
-          </div>
+              </article>
+            )
+          })}
+        </div>
         </section>
       )}
 
