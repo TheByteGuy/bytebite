@@ -11,17 +11,14 @@
       color: #2c3e50;
     }
     h1 { color: #2c3e50; }
-    select, button {
+    button {
       padding: 10px 14px;
       font-size: 16px;
       margin-right: 10px;
       border-radius: 6px;
-      border: 1px solid #ccc;
-    }
-    button {
+      border: none;
       background: #27ae60;
       color: white;
-      border: none;
       cursor: pointer;
     }
     button:hover { background: #219653; }
@@ -31,7 +28,7 @@
       padding: 16px;
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      max-height: 700px;
+      max-height: 600px;
       overflow-y: auto;
       font-family: monospace;
       font-size: 0.9em;
@@ -64,7 +61,7 @@
   <p>Extracts only: <code>name, calories, protein, allergens, isVegan</code>.<br>
      <strong>Filtered out:</strong> <code>Bakery, Dessert, Beverages, Bliss</code></p>
 
-  <button id="fetchAllBtn">Fetch All Dining Halls</button>
+  <button id="fetchBtn">Fetch All Dining Hall Menus</button>
 
   <div id="output">Result will appear here...</div>
 
@@ -72,10 +69,10 @@
     const API_KEY = "68717828-b754-420d-9488-4c37cb7d7ef7";
 
     const diningData = [
-        { name: "BARH", location_id: "76929003", menu_id: "153626" },
+            { name: "BARH", location_id: "76929003", menu_id: "153626" },
       { name: "Commons", location_id: "76929001", menu_id: "153148" },
       { name: "Russell Sage", location_id: "76929002", menu_id: "153157" },
-      { name: "Blitman", location_id: "76929015", menu_id: "153702" } // make sure this menu_id is correct
+      { name: "Blitman", location_id: "76929015", menu_id: "153702" }
     ];
 
     const EXCLUDED_GROUPS = ["Bakery","Dessert","Beverages","Bliss"];
@@ -99,8 +96,7 @@
         meal.groups.forEach(group => {
           const groupName = group.name;
           if (EXCLUDED_GROUPS.some(ex => ex.toLowerCase() === groupName.toLowerCase())) return;
-          result[mealName][groupName] = [];
-          group.items.forEach(item => result[mealName][groupName].push(extractItem(item)));
+          result[mealName][groupName] = group.items.map(extractItem);
         });
       });
       return result;
@@ -116,40 +112,81 @@
       URL.revokeObjectURL(url);
     }
 
-    async function fetchDiningHallMenu(dhall) {
-      const url = `https://api-prd.sodexomyway.net/v0.2/data/menu/${dhall.location_id}/${dhall.menu_id}?date=2025-11-15`;
-      const resp = await fetch(url, {
-        headers: {
-          "accept": "application/json",
-          "content-type": "application/json",
-          "api-key": API_KEY
+    async function callGemini(promptText) {
+      try {
+        const response = await fetch("http://localhost:8000/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: promptText })
+        });
+        const data = await response.json();
+        if (data.text) {
+          console.log("Gemini response:", data.text);
+          alert("AI Ranking Result:\n" + data.text);
+        } else if (data.error) {
+          console.error("Gemini API error:", data.error);
         }
-      });
-      if (!resp.ok) throw new Error(`${dhall.name} HTTP ${resp.status}`);
-      const fullData = await resp.json();
-      return buildFilteredJson(fullData);
+      } catch (err) {
+        console.error("Fetch failed:", err);
+      }
     }
 
-    document.getElementById("fetchAllBtn").addEventListener("click", async () => {
-      const output = document.getElementById("output");
-      output.textContent = "Fetching all dining halls...";
-      const allMenus = {};
-      for (const dhall of diningData) {
-        try {
-          const menu = await fetchDiningHallMenu(dhall);
-          allMenus[dhall.name] = menu;
-        } catch (err) {
-          allMenus[dhall.name] = { error: err.message };
-        }
-      }
-      output.innerHTML = `<pre>${JSON.stringify(allMenus, null, 2)}</pre>`;
+    //THIS CALLS THE GEMINI API AND COPIES TO CLIPBOARD
+    async function copyCompactJson(data) {
+      const compact = JSON.stringify(data, null, 0);
+      console.log("CALLING GEMINI");
+      await callGemini("Rank RPI dining halls by best foods to gain muscle, avoid lactose. Give percentages totaling 100. For each hall, list top 3 foods." + compact);
+     console.log("success:");
+    }
 
-      // Download button
-      const downloadBtn = document.createElement('div');
-      downloadBtn.innerHTML = 'Download All Menus JSON';
-      downloadBtn.className = 'download-btn';
-      downloadBtn.onclick = () => downloadJson(allMenus, 'all_dining_halls_menu_2025-11-15.json');
-      output.appendChild(downloadBtn);
+    document.getElementById("fetchBtn").addEventListener("click", async () => {
+      const output = document.getElementById("output");
+      output.textContent = "Fetching and filtering all dining halls...";
+      const allMenus = {};
+      try {
+        for (const hall of diningData) {
+          const url = `https://api-prd.sodexomyway.net/v0.2/data/menu/${hall.location_id}/${hall.menu_id}?date=2025-11-15`;
+          const resp = await fetch(url, {
+            headers: {
+              "accept": "application/json",
+              "content-type": "application/json",
+              "api-key": API_KEY
+            }
+          });
+          if (!resp.ok) throw new Error(`HTTP ${resp.status} for ${hall.name}`);
+          const fullData = await resp.json();
+          allMenus[hall.name] = buildFilteredJson(fullData);
+        }
+
+        output.innerHTML = `<pre>${JSON.stringify(allMenus, null, 2)}</pre>`;
+
+        // Copy & send to Gemini button
+        const copyBtn = document.createElement('div');
+        copyBtn.innerHTML = 'Copy & Rank with Gemini AI';
+        copyBtn.className = 'copy-btn';
+        copyBtn.onclick = async () => {
+          const success = await copyCompactJson(allMenus);
+          if (success) {
+            copyBtn.innerHTML = 'Copied!';
+            copyBtn.className = 'copy-btn copied';
+            setTimeout(() => {
+              copyBtn.innerHTML = 'Copy & Rank with Gemini AI';
+              copyBtn.className = 'copy-btn';
+            }, 2000);
+          } else {
+            copyBtn.innerHTML = 'Failed';
+            setTimeout(() => copyBtn.innerHTML = 'Copy & Rank with Gemini AI', 2000);
+          }
+        };
+        output.appendChild(copyBtn);
+
+      } catch (err) {
+        output.innerHTML = `
+          <div class="error">
+            <strong>Error:</strong> ${err.message}<br>
+            <small>Check network or API keys.</small>
+          </div>`;
+      }
     });
   </script>
 </body>
