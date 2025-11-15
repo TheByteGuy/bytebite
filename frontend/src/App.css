@@ -381,14 +381,16 @@
 
 .match-chip {
   border-radius: 999px;
-  padding: 0.45rem 0.9rem;
-  background: rgba(96, 43, 125, 0.08);
+  padding: 0.45rem 0.95rem;
+  border: 1px solid rgba(96, 43, 125, 0.25);
+  background: rgba(96, 43, 125, 0.05);
   color: var(--accent-purple);
   font-weight: 600;
   font-size: 0.9rem;
 }
 
 .match-chip--primary {
+  border-color: transparent;
   background: var(--accent-gradient);
   color: white;
 }
@@ -402,7 +404,11 @@
   display: flex;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: 1.25rem;
+}
+
+.hall-meta div {
+  flex: 1 1 200px;
 }
 
 .meta-label {
@@ -410,6 +416,12 @@
   letter-spacing: 0.08em;
   font-size: 0.7rem;
   color: #a496b3;
+}
+
+.hall-meta strong {
+  display: block;
+  margin-top: 0.2rem;
+  color: #23142f;
 }
 
 .highlight-list {
@@ -433,6 +445,55 @@
   position: absolute;
   left: 0;
   color: var(--accent-pink);
+}
+
+.menu-section {
+  border-top: 1px solid rgba(96, 43, 125, 0.15);
+  padding-top: 1rem;
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.menu-table-wrapper {
+  border: 1px solid rgba(96, 43, 125, 0.08);
+  border-radius: 16px;
+  overflow-x: auto;
+}
+
+.menu-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.menu-table th {
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  color: #7d6c90;
+  border-bottom: 1px solid rgba(96, 43, 125, 0.1);
+  background: rgba(96, 43, 125, 0.04);
+}
+
+.menu-table td {
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid rgba(96, 43, 125, 0.08);
+  color: #22132d;
+}
+
+.menu-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.menu-note {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #7d6c90;
+}
+
+.error-text {
+  color: #e52b4b;
 }
 
 .personal-note {

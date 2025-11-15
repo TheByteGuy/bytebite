@@ -1,26 +1,32 @@
-const express = require('express');
-const cors = require('cors');
-require('dotenv').config();
+import express from "express";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import createCommentRoutes from "./routes/commentRoutes.js";
+import path from "path";
+
+// Load .env from project root
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
 app.use(express.json());
 
-// test endpoint
-app.get('/', (req, res) => {
-  res.json({ message: "ByteBite API is running" });
+// Connect to MongoDB using URI from .env
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("Connected to MongoDB"))
+  .catch(err => console.error("MongoDB connection error:", err));
+
+// Switch to sample_mflix database
+const sampleMflixDb = mongoose.connection.useDb("sample_mflix");
+console.log("Using DB:", sampleMflixDb.name);
+
+// Use comment routes
+app.use("/comments", createCommentRoutes(sampleMflixDb));
+
+// Health check
+app.get("/", (req, res) => {
+  res.send("ByteBite API is running!");
 });
 
-// health check
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: "ok",
-    time: new Date().toISOString()
-  });
-});
-
-app.listen(PORT, () => {
-  console.log(`Backend running on http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
