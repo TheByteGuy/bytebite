@@ -1,4 +1,21 @@
-Protein
 Calories
-Allergies
-Name
+
+Total Fat
+
+Saturated Fat
+
+Carbs
+
+Fiber
+
+Protein
+
+Sugar
+
+Sodium
+
+Iron, Calcium, Potassium, Vitamin D  (LONG TERM NOT NECESSARILY NEEDED)
+
+All allergen info
+
+Diet labels (Vegan, Vegetarian, Plant-Based, Mindful)
