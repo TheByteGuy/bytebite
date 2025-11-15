@@ -671,7 +671,7 @@ function App() {
             <ul className="mini-hall-list">
               {heroPreview.map((hall) => (
                 <li key={hall.id}>
-                  <div>
+                  <div id = "mini-hall-info">
                     <strong>{hall.name}</strong>
                     <span>{hall.signature}</span>
                   </div>
