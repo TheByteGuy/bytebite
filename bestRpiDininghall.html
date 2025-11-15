@@ -2,80 +2,132 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Menu Data Extractor (All Dining Halls)</title>
+  <title>RPI Dining Hall Menu Extractor</title>
+
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 40px;
-      background: #f4f6f9;
-      color: #2c3e50;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      margin: 0;
+      padding: 40px 20px;
+      background: #eef1f5;
+      color: #2b2b2b;
+      display: flex;
+      justify-content: center;
     }
-    h1 { color: #2c3e50; }
+
+    .container {
+      max-width: 900px;
+      width: 100%;
+      background: #ffffff;
+      padding: 35px 40px;
+      border-radius: 14px;
+      box-shadow: 0 6px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 28px;
+      font-weight: 700;
+      color: #1f3c88;
+    }
+
+    p {
+      font-size: 15px;
+      background: #f5f8ff;
+      padding: 12px 15px;
+      border-radius: 10px;
+      border-left: 4px solid #1f3c88;
+      color: #3e4c68;
+    }
+
     button {
-      padding: 10px 14px;
-      font-size: 16px;
-      margin-right: 10px;
-      border-radius: 6px;
+      background: #1f7a54;
+      color: white;
       border: none;
-      background: #27ae60;
-      color: white;
-      cursor: pointer;
-    }
-    button:hover { background: #219653; }
-    #output {
-      margin-top: 20px;
-      background: white;
-      padding: 16px;
+      padding: 12px 18px;
+      font-size: 16px;
+      font-weight: 600;
       border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      max-height: 600px;
-      overflow-y: auto;
-      font-family: monospace;
-      font-size: 0.9em;
-    }
-    .download-btn, .copy-btn {
-      background: #3498db;
-      margin-top: 10px;
-      margin-right: 10px;
-      display: inline-block;
-      padding: 8px 12px;
-      border-radius: 6px;
-      text-decoration: none;
-      color: white;
-      font-size: 0.9em;
       cursor: pointer;
+      transition: 0.25s;
     }
-    .download-btn:hover, .copy-btn:hover { background: #2980b9; }
-    .copy-btn.copied { background: #27ae60; }
+
+    button:hover {
+      background: #146544;
+      transform: translateY(-2px);
+    }
+
+    #output {
+      margin-top: 22px;
+      padding: 20px;
+      background: #fafafa;
+      border: 1px solid #d9d9d9;
+      border-radius: 10px;
+      font-family: Consolas, monospace;
+      font-size: 14px;
+      max-height: 550px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
+    .copy-btn {
+      background: #2764c5;
+      margin-top: 16px;
+      display: inline-block;
+      padding: 10px 16px;
+      border-radius: 8px;
+      color: white;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .copy-btn:hover {
+      background: #1e4e9e;
+      transform: translateY(-1px);
+    }
+
+    .copy-btn.copied {
+      background: #1f7a54;
+    }
+
     .error {
-      color: #e74c3c;
-      background: #fdf2f2;
-      padding: 12px;
-      border-radius: 6px;
-      margin-top: 10px;
+      margin-top: 16px;
+      padding: 14px;
+      background: #ffecec;
+      color: #c0392b;
+      border-left: 4px solid #c0392b;
+      border-radius: 8px;
     }
   </style>
 </head>
+
 <body>
-  <h1>Menu Data Extractor (All Dining Halls)</h1>
-  <p>Extracts only: <code>name, calories, protein, allergens, isVegan</code>.<br>
-     <strong>Filtered out:</strong> <code>Bakery, Dessert, Beverages, Bliss</code></p>
+  <div class="container">
+    <h1>RPI Dining Hall Menu Extractor</h1>
 
-  <button id="fetchBtn">Fetch All Dining Hall Menus</button>
+    <p>
+      Extracts only: <code>name, calories, protein, allergens, isVegan</code>.<br>
+      <strong>Automatically filters out:</strong> Bakery, Dessert, Beverages, Bliss.
+    </p>
 
-  <div id="output">Result will appear here...</div>
+    <button id="fetchBtn">Fetch All Dining Hall Menus</button>
+
+    <div id="output">Awaiting action...</div>
+  </div>
 
   <script>
     const API_KEY = "68717828-b754-420d-9488-4c37cb7d7ef7";
 
     const diningData = [
-            { name: "BARH", location_id: "76929003", menu_id: "153626" },
+      { name: "BARH", location_id: "76929003", menu_id: "153626" },
       { name: "Commons", location_id: "76929001", menu_id: "153148" },
       { name: "Russell Sage", location_id: "76929002", menu_id: "153157" },
       { name: "Blitman", location_id: "76929015", menu_id: "153702" }
     ];
 
-    const EXCLUDED_GROUPS = ["Bakery","Dessert","Beverages","Bliss"];
+    const EXCLUDED_GROUPS = ["Bakery", "Dessert", "Beverages", "Bliss"];
 
     function extractItem(item) {
       return {
@@ -89,27 +141,19 @@
 
     function buildFilteredJson(data) {
       const result = {};
-      const meals = Array.isArray(data) ? data : (data.meals || []);
+      const meals = Array.isArray(data) ? data : data.meals || [];
+
       meals.forEach(meal => {
         const mealName = meal.name;
         result[mealName] = {};
+
         meal.groups.forEach(group => {
-          const groupName = group.name;
-          if (EXCLUDED_GROUPS.some(ex => ex.toLowerCase() === groupName.toLowerCase())) return;
-          result[mealName][groupName] = group.items.map(extractItem);
+          if (EXCLUDED_GROUPS.includes(group.name)) return;
+          result[mealName][group.name] = group.items.map(extractItem);
         });
       });
-      return result;
-    }
 
-    function downloadJson(data, filename) {
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      a.click();
-      URL.revokeObjectURL(url);
+      return result;
     }
 
     async function callGemini(promptText) {
@@ -120,9 +164,9 @@
           body: JSON.stringify({ prompt: promptText })
         });
         const data = await response.json();
+
         if (data.text) {
-          console.log("Gemini response:", data.text);
-          alert("AI Ranking Result:\n" + data.text);
+          alert("AI Ranking Result:\n\n" + data.text);
         } else if (data.error) {
           console.error("Gemini API error:", data.error);
         }
@@ -131,7 +175,6 @@
       }
     }
 
-    //THIS CALLS THE GEMINI API AND COPIES TO CLIPBOARD
     async function copyCompactJson(data) {
       const compact = JSON.stringify(data, null, 0);
       console.log("CALLING GEMINI");
@@ -143,11 +186,15 @@ await callGemini(
 
     document.getElementById("fetchBtn").addEventListener("click", async () => {
       const output = document.getElementById("output");
-      output.textContent = "Fetching and filtering all dining halls...";
+
+      output.textContent = "Fetching dining hall menus...";
+
       const allMenus = {};
+
       try {
         for (const hall of diningData) {
           const url = `https://api-prd.sodexomyway.net/v0.2/data/menu/${hall.location_id}/${hall.menu_id}?date=2025-11-15`;
+
           const resp = await fetch(url, {
             headers: {
               "accept": "application/json",
@@ -155,38 +202,37 @@ await callGemini(
               "api-key": API_KEY
             }
           });
+
           if (!resp.ok) throw new Error(`HTTP ${resp.status} for ${hall.name}`);
+
           const fullData = await resp.json();
           allMenus[hall.name] = buildFilteredJson(fullData);
         }
 
-        output.innerHTML = `<pre>${JSON.stringify(allMenus, null, 2)}</pre>`;
+        output.textContent = JSON.stringify(allMenus, null, 2);
 
-        // Copy & send to Gemini button
-        const copyBtn = document.createElement('div');
-        copyBtn.innerHTML = 'Copy & Rank with Gemini AI';
-        copyBtn.className = 'copy-btn';
+        const copyBtn = document.createElement("div");
+        copyBtn.textContent = "Copy & Rank with Gemini AI";
+        copyBtn.className = "copy-btn";
+
         copyBtn.onclick = async () => {
-          const success = await copyCompactJson(allMenus);
-          if (success) {
-            copyBtn.innerHTML = 'Copied!';
-            copyBtn.className = 'copy-btn copied';
-            setTimeout(() => {
-              copyBtn.innerHTML = 'Copy & Rank with Gemini AI';
-              copyBtn.className = 'copy-btn';
-            }, 2000);
-          } else {
-            copyBtn.innerHTML = 'Failed';
-            setTimeout(() => copyBtn.innerHTML = 'Copy & Rank with Gemini AI', 2000);
-          }
+          await copyCompactJson(allMenus);
+          copyBtn.textContent = "Done!";
+          copyBtn.classList.add("copied");
+
+          setTimeout(() => {
+            copyBtn.textContent = "Copy & Rank with Gemini AI";
+            copyBtn.classList.remove("copied");
+          }, 2000);
         };
+
         output.appendChild(copyBtn);
 
       } catch (err) {
         output.innerHTML = `
           <div class="error">
             <strong>Error:</strong> ${err.message}<br>
-            <small>Check network or API keys.</small>
+            <small>Network or API key issue.</small>
           </div>`;
       }
     });

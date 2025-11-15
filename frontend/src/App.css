@@ -249,9 +249,11 @@
 
 .chip-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.65rem;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 12px;
 }
+
 
 .chip {
   border: 1px solid rgba(96, 43, 125, 0.2);
