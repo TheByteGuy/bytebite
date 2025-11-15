@@ -36,9 +36,6 @@ async def generate_content(request: PromptRequest):
         response = client.models.generate_content(
             model="gemini-2.0-flash",
             contents=request.prompt,
-            generation_config={
-                "max_output_tokens": 128
-            }
         )
         return {"text": response.text}
     except Exception as e:
