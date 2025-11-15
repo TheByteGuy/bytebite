@@ -16,7 +16,12 @@ app = FastAPI()
 # CORS setup (for React)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React dev server
+    allow_origins=[
+        "http://localhost:3000/",
+        "http://127.0.0.1:3000/",
+        "https://bytebite.vercel.app/",          # your Vercel site
+        "https://bytebite-bq4x.onrender.com/",   # your Render backend
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
