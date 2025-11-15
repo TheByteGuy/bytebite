@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Menu Data Extractor</title>
+  <title>Menu Data Extractor (Copy + Download)</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -10,9 +10,7 @@
       background: #f4f6f9;
       color: #2c3e50;
     }
-    h1 {
-      color: #2c3e50;
-    }
+    h1 { color: #2c3e50; }
     select, button {
       padding: 10px 14px;
       font-size: 16px;
@@ -26,27 +24,32 @@
       border: none;
       cursor: pointer;
     }
-    button:hover {
-      background: #219653;
-    }
+    button:hover { background: #219653; }
     #output {
       margin-top: 20px;
       background: white;
       padding: 16px;
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      max-height: 500px;
+      max-height: 600px;
       overflow-y: auto;
       font-family: monospace;
       font-size: 0.9em;
     }
-    .download-btn {
+    .download-btn, .copy-btn {
       background: #3498db;
       margin-top: 10px;
+      margin-right: 10px;
+      display: inline-block;
+      padding: 8px 12px;
+      border-radius: 6px;
+      text-decoration: none;
+      color: white;
+      font-size: 0.9em;
+      cursor: pointer;
     }
-    .download-btn:hover {
-      background: #2980b9;
-    }
+    .download-btn:hover, .copy-btn:hover { background: #2980b9; }
+    .copy-btn.copied { background: #27ae60; }
     .error {
       color: #e74c3c;
       background: #fdf2f2;
@@ -57,8 +60,9 @@
   </style>
 </head>
 <body>
-  <h1>Menu Data Extractor</h1>
-  <p>Select a dining hall and get a <strong>tiny JSON</strong> with only the nutrition & diet info.</p>
+  <h1>Menu Data Extractor (Filtered)</h1>
+  <p>Extracts only: <code>name, calories, protein, allergens, isVegan</code>.<br>
+     <strong>Filtered out:</strong> <code>Bakery, Dessert, Beverages, Bliss</code></p>
 
   <label for="dhSelect">Choose Dining Hall:</label>
   <select id="dhSelect"></select>
@@ -73,7 +77,15 @@
       { name: "BARH", location_id: "76929003", menu_id: "153626" },
       { name: "Commons", location_id: "76929001", menu_id: "153148" },
       { name: "Russell Sage", location_id: "76929002", menu_id: "153157" },
-      { name: "Blitman", location_id: "76929015", menu_id: "153702" }
+      { name: "Blitman", location_id: "76929015", menu_id: "153626" }
+    ];
+
+    // HARD-CODED GROUPS TO EXCLUDE (case-insensitive)
+    const EXCLUDED_GROUPS = [
+      "Bakery",
+      "Dessert",
+      "Beverages",
+      "Bliss"
     ];
 
     // Populate dropdown
@@ -89,40 +101,30 @@
     function extractItem(item) {
       return {
         name: item.formalName,
-       // meal: item.meal,
         calories: item.calories || null,
-        // fat: item.fat ? `${item.fat}g` : null,
-        // saturatedFat: item.saturatedFat || null,
-        // carbohydrates: item.carbohydrates ? `${item.carbohydrates}g` : null,
-        // dietaryFiber: item.dietaryFiber ? `${item.dietaryFiber}g` : null,
         protein: item.protein ? `${item.protein}g` : null,
-        // sugar: item.sugar ? `${item.sugar}g` : null,
-        // sodium: item.sodium || null,
-        // iron: item.iron || null,
-        // calcium: item.calcium || null,
-        // potassium: item.potassium || null,
-        // vitaminD: item.vitaminD || null,
         allergens: item.allergens ? item.allergens.map(a => a.name) : [],
-        isVegan: !!item.isVegan,
-        // isVegetarian: !!item.isVegetarian,
-        // isPlantBased: !!item.isPlantBased,
-        // isMindful: !!item.isMindful
+        isVegan: !!item.isVegan
       };
     }
 
-    // Build tiny JSON structure
-    function buildTinyJson(data) {
+    // Build filtered JSON: { Meal: { Group: [items] } }
+    function buildFilteredJson(data) {
       const result = {};
-
       const meals = Array.isArray(data) ? data : (data.meals || []);
 
       meals.forEach(meal => {
         const mealName = meal.name;
-        result[mealName] = [];
+        result[mealName] = {};
 
         meal.groups.forEach(group => {
+          const groupName = group.name;
+          if (EXCLUDED_GROUPS.some(ex => ex.toLowerCase() === groupName.toLowerCase())) {
+            return; // skip
+          }
+          result[mealName][groupName] = [];
           group.items.forEach(item => {
-            result[mealName].push(extractItem(item));
+            result[mealName][groupName].push(extractItem(item));
           });
         });
       });
@@ -130,7 +132,7 @@
       return result;
     }
 
-    // Download JSON
+    // Download pretty JSON
     function downloadJson(data, filename) {
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
@@ -141,12 +143,24 @@
       URL.revokeObjectURL(url);
     }
 
+    // Copy compact JSON to clipboard (NO WHITESPACE)
+    async function copyCompactJson(data) {
+      const compact = JSON.stringify(data, null, 0); // equivalent to separators=(',', ':')
+      try {
+        await navigator.clipboard.writeText(compact);
+        return true;
+      } catch (err) {
+        console.error("Copy failed:", err);
+        return false;
+      }
+    }
+
     document.getElementById("fetchBtn").addEventListener("click", async () => {
       const chosen = diningData.find(d => d.menu_id === select.value);
       const url = `https://api-prd.sodexomyway.net/v0.2/data/menu/${chosen.location_id}/${chosen.menu_id}?date=2025-11-15`;
       const output = document.getElementById("output");
 
-      output.textContent = "Fetching and extracting...";
+      output.textContent = "Fetching and filtering...";
 
       try {
         const resp = await fetch(url, {
@@ -160,20 +174,44 @@
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
 
         const fullData = await resp.json();
-        const tinyData = buildTinyJson(fullData);
+        const filteredData = buildFilteredJson(fullData);
 
-        // Display
-        output.innerHTML = `<pre>${JSON.stringify(tinyData, null, 2)}</pre>`;
+        // Clear previous buttons
+        output.innerHTML = `<pre>${JSON.stringify(filteredData, null, 2)}</pre>`;
 
-        // Add download button
-        const downloadBtn = document.createElement('button');
-        downloadBtn.textContent = `Download ${chosen.name}_menu.json`;
+        // === DOWNLOAD BUTTON ===
+        const downloadBtn = document.createElement('div');
+        downloadBtn.innerHTML = `Download ${chosen.name}_menu_filtered.json`;
         downloadBtn.className = 'download-btn';
-        downloadBtn.onclick = () => downloadJson(tinyData, `${chosen.name}_menu_2025-11-15.json`);
+        downloadBtn.onclick = () => downloadJson(filteredData, `${chosen.name}_menu_filtered_2025-11-15.json`);
         output.appendChild(downloadBtn);
 
+        // === COPY COMPACT JSON BUTTON ===
+        const copyBtn = document.createElement('div');
+        copyBtn.innerHTML = 'Copy Compact JSON';
+        copyBtn.className = 'copy-btn';
+        copyBtn.onclick = async () => {
+          const success = await copyCompactJson(filteredData);
+          if (success) {
+            copyBtn.innerHTML = 'Copied!';
+            copyBtn.className = 'copy-btn copied';
+            setTimeout(() => {
+              copyBtn.innerHTML = 'Copy Compact JSON';
+              copyBtn.className = 'copy-btn';
+            }, 2000);
+          } else {
+            copyBtn.innerHTML = 'Failed';
+            setTimeout(() => copyBtn.innerHTML = 'Copy Compact JSON', 2000);
+          }
+        };
+        output.appendChild(copyBtn);
+
       } catch (err) {
-        output.innerHTML = `<div class="error">Error: ${err.message}<br><small>Try a past date like 2024-11-01 if no data for today.</small></div>`;
+        output.innerHTML = `
+          <div class="error">
+            <strong>Error:</strong> ${err.message}<br>
+            <small>Check network or try another dining hall.</small>
+          </div>`;
       }
     });
   </script>
