@@ -135,8 +135,10 @@
     async function copyCompactJson(data) {
       const compact = JSON.stringify(data, null, 0);
       console.log("CALLING GEMINI");
-      await callGemini("Rank RPI dining halls by best foods to gain muscle, avoid lactose. Give percentages totaling 100. For each hall, list top 3 foods." + compact);
-     console.log("success:");
+await callGemini(
+  "Rank RPI dining halls for muscle gain + lactose avoidance. Output total=100% share per hall + top 3 foods each. No descriptions. Only: Hall, %, 3 foods. Data:" 
+  + compact
+);     console.log("success:");
     }
 
     document.getElementById("fetchBtn").addEventListener("click", async () => {
