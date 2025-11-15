@@ -22,13 +22,18 @@
   font-size: 1rem;
 }
 
-.logo-dot {
-  width: 48px;
-  height: 48px;
+#logo {
+  height: 67px;
+  width: 67px;
   border-radius: 16px;
-  background: var(--accent-gradient);
-  box-shadow: 0 15px 40px rgba(229, 43, 75, 0.4);
-  display: inline-block;
+  overflow: hidden;
+  background: rgb(255, 255, 255);
+}
+
+#logo img {
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
 }
 
 .eyebrow {
@@ -36,7 +41,7 @@
   color: #867c8f;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  font-size: 0.75rem;
+  font-size: 0.95rem;
 }
 
 .nav-actions {

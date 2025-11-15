@@ -367,7 +367,9 @@ function App() {
     <div className="app-shell">
       <nav className="top-nav">
         <div className="brand">
-          <span className="logo-dot" aria-hidden="true" />
+          <div id="logo">
+            <img src="/ByteBiteOfficialv1.png" alt="ByteBite Logo"/>
+          </div>
           <div>
             <p className="eyebrow">ByteBite</p>
             <strong>Campus Fuel Planner</strong>
