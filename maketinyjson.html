@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Menu Data Extractor</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 40px;
+      background: #f4f6f9;
+      color: #2c3e50;
+    }
+    h1 {
+      color: #2c3e50;
+    }
+    select, button {
+      padding: 10px 14px;
+      font-size: 16px;
+      margin-right: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #27ae60;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #219653;
+    }
+    #output {
+      margin-top: 20px;
+      background: white;
+      padding: 16px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      max-height: 500px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 0.9em;
+    }
+    .download-btn {
+      background: #3498db;
+      margin-top: 10px;
+    }
+    .download-btn:hover {
+      background: #2980b9;
+    }
+    .error {
+      color: #e74c3c;
+      background: #fdf2f2;
+      padding: 12px;
+      border-radius: 6px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Menu Data Extractor</h1>
+  <p>Select a dining hall and get a <strong>tiny JSON</strong> with only the nutrition & diet info.</p>
+
+  <label for="dhSelect">Choose Dining Hall:</label>
+  <select id="dhSelect"></select>
+  <button id="fetchBtn">Extract Menu Data</button>
+
+  <div id="output">Result will appear here...</div>
+
+  <script>
+    const API_KEY = "68717828-b754-420d-9488-4c37cb7d7ef7";
+
+    const diningData = [
+      { name: "BARH", location_id: "76929003", menu_id: "153626" },
+      { name: "Commons", location_id: "76929001", menu_id: "153148" },
+      { name: "Russell Sage", location_id: "76929002", menu_id: "153157" },
+      { name: "Blitman", location_id: "76929015", menu_id: "153702" }
+    ];
+
+    // Populate dropdown
+    const select = document.getElementById("dhSelect");
+    diningData.forEach(item => {
+      const opt = document.createElement("option");
+      opt.value = item.menu_id;
+      opt.textContent = item.name;
+      select.appendChild(opt);
+    });
+
+    // Extract only relevant fields
+    function extractItem(item) {
+      return {
+        name: item.formalName,
+       // meal: item.meal,
+        calories: item.calories || null,
+        // fat: item.fat ? `${item.fat}g` : null,
+        // saturatedFat: item.saturatedFat || null,
+        // carbohydrates: item.carbohydrates ? `${item.carbohydrates}g` : null,
+        // dietaryFiber: item.dietaryFiber ? `${item.dietaryFiber}g` : null,
+        protein: item.protein ? `${item.protein}g` : null,
+        // sugar: item.sugar ? `${item.sugar}g` : null,
+        // sodium: item.sodium || null,
+        // iron: item.iron || null,
+        // calcium: item.calcium || null,
+        // potassium: item.potassium || null,
+        // vitaminD: item.vitaminD || null,
+        allergens: item.allergens ? item.allergens.map(a => a.name) : [],
+        isVegan: !!item.isVegan,
+        // isVegetarian: !!item.isVegetarian,
+        // isPlantBased: !!item.isPlantBased,
+        // isMindful: !!item.isMindful
+      };
+    }
+
+    // Build tiny JSON structure
+    function buildTinyJson(data) {
+      const result = {};
+
+      const meals = Array.isArray(data) ? data : (data.meals || []);
+
+      meals.forEach(meal => {
+        const mealName = meal.name;
+        result[mealName] = [];
+
+        meal.groups.forEach(group => {
+          group.items.forEach(item => {
+            result[mealName].push(extractItem(item));
+          });
+        });
+      });
+
+      return result;
+    }
+
+    // Download JSON
+    function downloadJson(data, filename) {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    document.getElementById("fetchBtn").addEventListener("click", async () => {
+      const chosen = diningData.find(d => d.menu_id === select.value);
+      const url = `https://api-prd.sodexomyway.net/v0.2/data/menu/${chosen.location_id}/${chosen.menu_id}?date=2025-11-15`;
+      const output = document.getElementById("output");
+
+      output.textContent = "Fetching and extracting...";
+
+      try {
+        const resp = await fetch(url, {
+          headers: {
+            "accept": "application/json",
+            "content-type": "application/json",
+            "api-key": API_KEY
+          }
+        });
+
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+        const fullData = await resp.json();
+        const tinyData = buildTinyJson(fullData);
+
+        // Display
+        output.innerHTML = `<pre>${JSON.stringify(tinyData, null, 2)}</pre>`;
+
+        // Add download button
+        const downloadBtn = document.createElement('button');
+        downloadBtn.textContent = `Download ${chosen.name}_menu.json`;
+        downloadBtn.className = 'download-btn';
+        downloadBtn.onclick = () => downloadJson(tinyData, `${chosen.name}_menu_2025-11-15.json`);
+        output.appendChild(downloadBtn);
+
+      } catch (err) {
+        output.innerHTML = `<div class="error">Error: ${err.message}<br><small>Try a past date like 2024-11-01 if no data for today.</small></div>`;
+      }
+    });
+  </script>
+</body>
+</html>
