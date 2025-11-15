@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 
 const STORAGE_KEY = 'bytebite-profile'
@@ -88,6 +88,14 @@ const diningHalls = [
     signature: 'Neighborhood brunch + dinner spot',
   },
 ]
+const menuFileMap = {
+  commons: '/menus/commons.json',
+  sage: '/menus/sage.json',
+  barh: '/menus/barh.json',
+  blitman: '/menus/blitman.json',
+}
+
+const MAX_MENU_ROWS = 6
 
 const safeStorage = {
   read() {
@@ -135,6 +143,57 @@ const getMatchScore = (hall, profile) => {
   return Math.min(score, MAX_MATCH_SCORE)
 }
 
+const buildDietTags = (item = {}) => {
+  const tags = []
+  if (item.isVegan) {
+    tags.push('Vegan')
+  } else if (item.isVegetarian) {
+    tags.push('Vegetarian')
+  }
+
+  if (item.isPlantBased) {
+    tags.push('Plant-based')
+  }
+
+  if (item.isMindful) {
+    tags.push('Mindful')
+  }
+
+  return tags
+}
+
+const stringifyAllergens = (allergens = []) => {
+  if (!Array.isArray(allergens) || allergens.length === 0) return ''
+  return allergens
+    .map((allergen) => allergen?.name)
+    .filter(Boolean)
+    .join(', ')
+}
+
+const flattenMenuItems = (rawMenu) => {
+  if (!rawMenu) return []
+  const meals = Array.isArray(rawMenu) ? rawMenu : rawMenu?.meals ?? []
+  const rows = []
+
+  meals.forEach((meal) => {
+    meal?.groups?.forEach((group) => {
+      group?.items?.forEach((item, idx) => {
+        rows.push({
+          id: `${meal?.name || 'Meal'}-${group?.name || 'Group'}-${item?.menuItemId || idx}`,
+          meal: meal?.name || 'Meal',
+          station: group?.name || 'Station',
+          name: item?.formalName || item?.description || 'Menu item',
+          calories: item?.calories || '—',
+          tags: buildDietTags(item),
+          allergens: stringifyAllergens(item?.allergens),
+        })
+      })
+    })
+  })
+
+  return rows
+}
+
 function App() {
   const [view, setView] = useState('home')
   const [authMode, setAuthMode] = useState('signup')
@@ -150,6 +209,8 @@ function App() {
   const [storedPreferences, setStoredPreferences] = useState(null)
   const [feedback, setFeedback] = useState('')
   const [authError, setAuthError] = useState('')
+  const [menuData, setMenuData] = useState({})
+  const menuDataRef = useRef(menuData)
 
   useEffect(() => {
     const saved = safeStorage.read()
@@ -167,6 +228,50 @@ function App() {
   useEffect(() => {
     setAuthError('')
   }, [authMode])
+
+  useEffect(() => {
+    menuDataRef.current = menuData
+  }, [menuData])
+
+  useEffect(() => {
+    if (view !== 'dining') return
+    const pendingHalls = diningHalls.filter((hall) => !menuDataRef.current[hall.id])
+    if (pendingHalls.length === 0) return
+    let cancelled = false
+
+    pendingHalls.forEach((hall) => {
+      setMenuData((prev) => ({
+        ...prev,
+        [hall.id]: { status: 'loading' },
+      }))
+
+      fetch(menuFileMap[hall.id])
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error('Menu not available')
+          }
+          return response.json()
+        })
+        .then((data) => {
+          if (cancelled) return
+          setMenuData((prev) => ({
+            ...prev,
+            [hall.id]: { status: 'loaded', data },
+          }))
+        })
+        .catch((error) => {
+          if (cancelled) return
+          setMenuData((prev) => ({
+            ...prev,
+            [hall.id]: { status: 'error', error: error.message },
+          }))
+        })
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [view])
 
   const isAuthenticated = Boolean(userProfile)
 
@@ -505,6 +610,9 @@ function App() {
               const matchPercent = isAuthenticated
                 ? Math.round(((hall.score ?? 0) / MAX_MATCH_SCORE) * 100)
                 : null
+              const hallMenu = menuData[hall.id]
+              const hallMenuItems = flattenMenuItems(hallMenu?.data)
+              const menuRows = hallMenuItems.slice(0, MAX_MENU_ROWS)
 
               return (
                 <article
@@ -545,6 +653,54 @@ function App() {
                       <li key={highlight}>{highlight}</li>
                     ))}
                   </ul>
+
+                  <div className="menu-section">
+                    <span className="meta-label">Menu snapshot</span>
+                    {!hallMenu && <p className="menu-note">Menu loads when you open this view.</p>}
+                    {hallMenu?.status === 'loading' && (
+                      <p className="menu-note">Pulling today's feed...</p>
+                    )}
+                    {hallMenu?.status === 'error' && (
+                      <p className="menu-note error-text">
+                        Unable to load menu file: {hallMenu.error}
+                      </p>
+                    )}
+                    {hallMenu?.status === 'loaded' && menuRows.length === 0 && (
+                      <p className="menu-note">No menu items listed in the JSON yet.</p>
+                    )}
+                    {hallMenu?.status === 'loaded' && menuRows.length > 0 && (
+                      <div className="menu-table-wrapper">
+                        <table className="menu-table">
+                          <thead>
+                            <tr>
+                              <th>Meal</th>
+                              <th>Station</th>
+                              <th>Item</th>
+                              <th>Calories</th>
+                              <th>Tags</th>
+                              <th>Allergens</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {menuRows.map((row) => (
+                              <tr key={row.id}>
+                                <td>{row.meal}</td>
+                                <td>{row.station}</td>
+                                <td>{row.name}</td>
+                                <td>{row.calories}</td>
+                                <td>{row.tags.length ? row.tags.join(' · ') : '—'}</td>
+                                <td>{row.allergens || 'None listed'}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        <p className="menu-note">
+                          Showing {menuRows.length} of {hallMenuItems.length} dishes from the sample
+                          feed.
+                        </p>
+                      </div>
+                    )}
+                  </div>
 
                   {isAuthenticated && (
                     <p className="personal-note">
