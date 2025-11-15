@@ -318,6 +318,12 @@
   border-bottom: 1px dashed rgba(96, 43, 125, 0.2);
 }
 
+#mini-hall-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
 .mini-area {
   color: #877394;
   font-size: 0.85rem;
