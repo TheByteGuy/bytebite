@@ -73,6 +73,11 @@
   color: var(--accent-pink);
 }
 
+.ghost-button--active:hover {
+  color: #ad1634;
+  border-color: #e52b4b;
+}
+
 .ghost-button.danger {
   border-color: rgba(229, 43, 75, 0.4);
   color: #c01f3f;
@@ -181,7 +186,8 @@
 .primary:hover,
 .secondary:hover,
 .ghost-button:hover {
-  transform: translateY(-1px);
+  transform: translateY(-3px);
+  opacity: 0.95;
 }
 
 .home-grid {
