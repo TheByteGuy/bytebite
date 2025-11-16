@@ -424,6 +424,8 @@
   color: #7d6c90;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  margin-left: 10px;
+  margin-right: -3px;
 }
 
 .view-toggle__buttons {
@@ -792,4 +794,43 @@
   .hall-grid {
     grid-template-columns: 1fr; /* single column on small screens */
   }
+}
+
+.segmented-control {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0.3rem;
+  border-radius: 50px;
+  width: 260px;
+  height: 42px;
+}
+
+.segmented-btn {
+  flex: 1;
+  text-align: center;
+  background: transparent;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  z-index: 2;
+  color: #5a4b7a;
+  font-size: 0.95rem;
+}
+
+.segmented-btn.active {
+  color: #1d0f28;
+}
+
+.segmented-highlight {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  height: calc(100% - 8px);
+  background: white;
+  border-radius: 999px;
+  z-index: 1;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+  transition: transform 0.25s ease;
 }

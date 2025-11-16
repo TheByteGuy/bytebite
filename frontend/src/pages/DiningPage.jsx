@@ -477,27 +477,29 @@ function DiningPage({
 
       {hallCount > 0 && (
         <div className="view-toggle">
-          <span>View style:</span>
-          <div className="view-toggle__buttons">
+          <span>VIEW STYLE:</span>
+
+          <div className="segmented-control">
+            <div
+              className="segmented-highlight"
+              style={{
+                transform:
+                  hallViewMode === "carousel"
+                    ? "translateX(0%)"
+                    : "translateX(100%)"
+              }}
+            />
+
             <button
-              type="button"
-              className={
-                hallViewMode === 'carousel'
-                  ? 'toggle-btn toggle-btn--active'
-                  : 'toggle-btn'
-              }
-              onClick={() => onChangeHallViewMode('carousel')}
+              className={`segmented-btn ${hallViewMode === "carousel" ? "active" : ""}`}
+              onClick={() => onChangeHallViewMode("carousel")}
             >
               Spotlight
             </button>
+
             <button
-              type="button"
-              className={
-                hallViewMode === 'grid'
-                  ? 'toggle-btn toggle-btn--active'
-                  : 'toggle-btn'
-              }
-              onClick={() => onChangeHallViewMode('grid')}
+              className={`segmented-btn ${hallViewMode === "grid" ? "active" : ""}`}
+              onClick={() => onChangeHallViewMode("grid")}
             >
               All halls
             </button>
