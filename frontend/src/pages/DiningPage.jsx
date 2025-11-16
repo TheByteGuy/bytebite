@@ -1,4 +1,41 @@
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
+
+const MATCH_PERCENT_KEYS = [
+  'matchPercent',
+  'percentMatch',
+  'percent',
+  'percentage',
+  'match_percentage',
+  'match_percentage_score',
+  'personalizedPercent',
+  'personalizationPercent',
+  'geminiPercent',
+  'matchScore',
+  'match_score',
+]
+
+const extractMatchPercentValue = (source) => {
+  if (!source || typeof source !== 'object' || Array.isArray(source)) {
+    return null
+  }
+
+  for (const key of MATCH_PERCENT_KEYS) {
+    if (source[key] !== undefined && source[key] !== null) {
+      return source[key]
+    }
+  }
+
+  for (const value of Object.values(source)) {
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      const nested = extractMatchPercentValue(value)
+      if (nested !== null && nested !== undefined) {
+        return nested
+      }
+    }
+  }
+
+  return null
+}
 import AIAssistant from "../components/AIAssistant";
 const SAMPLE_MENU_BLUEPRINT = [
   {
@@ -524,7 +561,7 @@ function DiningPage({
                       Top3: food1, food2, food3
                       Data: ${compactJSON}`
 
-                    // const resp = await fetch("https://bytebite-bq4x.onrender.com/generate", {
+                    // const resp = await fetch("https://bytebite-615j.onrender.com/generate", {
                     //   method: "POST",
                     //   headers: { "Content-Type": "application/json" },
                     //   body: JSON.stringify({ prompt }),
