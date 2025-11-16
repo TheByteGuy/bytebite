@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import AIAssistant from "../components/AIAssistant";
 
 const SAMPLE_MENU_BLUEPRINT = [
   {
@@ -460,6 +461,8 @@ function DiningPage({
       )}
 
       {isCarouselActive ? renderSpotlightView() : renderAllHallsTable()}
+      <AIAssistant />
+
     </section>
   )
 }
