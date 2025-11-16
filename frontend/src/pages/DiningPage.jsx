@@ -474,19 +474,6 @@ function DiningPage({
           <button className="ghost-button" type="button" onClick={onBackToPlanner}>
             Back to planner
           </button>
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-            {isAuthenticated &&
-              !hasPersonalizedRankings &&
-              userProfile?.goal &&
-              userProfile?.diet &&
-              hallsToRender.length > 0 &&
-              hallsToRender.every(
-                (hall) => mergedMenuData[hall.id]?.status === "loaded"
-              ) && (
-=======
-=======
->>>>>>> Stashed changes
 
           {isAuthenticated &&
             !hasPersonalizedRankings &&
@@ -496,59 +483,11 @@ function DiningPage({
             hallsToRender.every(
               (hall) => mergedMenuData[hall.id]?.status === "loaded"
             ) && (
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
               <button
                 className="primary"
                 type="button"
                 onClick={async () => {
                   try {
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-                    // Convert your menu JSON into a compact string
-                    const compactJSON = JSON.stringify(mergedMenuData, null, 0);
-
-                    // Build the prompt for Gemini
-                    const prompt = `Rank RPI dining halls for this user based on their goal (${userProfile.goal}) and diet (${userProfile.diet}). Total=100%. 
-            For each hall, output exactly in this format:
-            Hall: X%
-            Top3: food1, food2, food3
-            Data: ${compactJSON}`;
-
-        // Call Gemini via your API endpoint
-        const resp = await fetch("https://bytebite-bq4x.onrender.com/generate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ prompt })
-        });
-
-        const data = await resp.json();
-
-        if (data.text) {
-          alert("AI Ranking Result:\n\n" + data.text);
-        } else if (data.error) {
-          console.error("Gemini API error:", data.error);
-          alert("Gemini API error: " + data.error);
-        }
-
-        // Keep the original personalization behavior
-        onActivatePersonalization();
-      } catch (err) {
-        console.error("Failed to call Gemini:", err);
-        alert("Failed to fetch AI ranking. See console for details.");
-      }
-    }}
-  >
-    Personalize my rankings
-  </button>
-)}
-
-
-=======
-=======
->>>>>>> Stashed changes
                     const compactJSON = JSON.stringify(mergedMenuData, null, 0)
 
                     const prompt = `Rank RPI dining halls for this user based on their goal (${userProfile.goal}) and diet (${userProfile.diet}). Total=100%. 
@@ -583,10 +522,6 @@ Data: ${compactJSON}`
                 Personalize my rankings
               </button>
             )}
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
         </div>
       </div>
 
