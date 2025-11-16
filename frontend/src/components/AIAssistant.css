@@ -1,0 +1,97 @@
+/* Container spacing */
+.ai-input-bar {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  gap: 0.75rem;
+  border-top: 1px solid #eee;
+  background: white;
+}
+
+/* First row — quick buttons */
+.ai-quick-row {
+  display: flex;
+  gap: 0.5rem;
+}
+.ai-messages {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  gap: 0.25rem;
+  overflow-y: auto;
+}
+
+/* Pill-shaped quick buttons */
+.ai-quick-btn {
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  background: #f7f7f9;
+  border: 1px solid #ddd;
+  font-size: 0.9rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: 0.2s ease;
+}
+
+.ai-quick-btn:hover {
+  background: #ececf2;
+}
+
+/* Input + send row */
+.ai-input-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Input styling */
+.ai-input-row input {
+  flex: 1;
+  padding: 0.65rem 1rem;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  background: #fafafa;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.ai-input-row input:focus {
+  border-color: #c046df; /* soft purple from your theme */
+  box-shadow: 0 0 4px rgba(192, 70, 223, 0.3);
+}
+
+/* ByteBite gradient send button */
+.send-btn {
+  padding: 0.65rem 1rem;
+  border-radius: 12px;
+  border: none;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  background: linear-gradient(90deg, #d7336c, #6c2ad9);
+  transition: 0.2s ease;
+}
+
+.send-btn:hover {
+  opacity: 0.85;
+}
+.ai-assistant {
+  align-self: flex-start;
+  background: #f3f3f8;
+  color: #333;
+  border-radius: 12px 12px 12px 4px;
+  padding: 0.75rem 1rem;
+  max-width: 75%;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.ai-user {
+  align-self: flex-end;
+  background: linear-gradient(90deg, #d7336c, #6c2ad9);
+  color: white;
+  border-radius: 12px 12px 4px 12px;
+  padding: 0.75rem 1rem;
+  max-width: 75%;
+  margin-bottom: 0.5rem;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.12);
+}

@@ -6,5 +6,8 @@
     "dev": "npm --prefix frontend run dev",
     "dev:frontend": "npm --prefix frontend run dev",
     "dev:backend": "npm --prefix backend run dev"
+  },
+  "dependencies": {
+    "react-markdown": "^10.1.0"
   }
 }
