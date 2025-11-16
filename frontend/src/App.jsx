@@ -198,19 +198,10 @@ const flattenMenuItems = (rawMenu) => {
 
 function App() {
   const [view, setView] = useState('home')
-
-  const [signupForm, setSignupForm] = useState({
-  name: '',
-  goal: '',
-  diet: '',
-  allergies: [],
-})
-
-
+  const [signupForm, setSignupForm] = useState({ name: '', goal: '', diet: '', allergies: [] })
   const [userProfile, setUserProfile] = useState(null)
   const [feedback, setFeedback] = useState('')
   const [menuData, setMenuData] = useState({})
-
   const [hallSpotlightIndex, setHallSpotlightIndex] = useState(0)
   const [hallViewMode, setHallViewMode] = useState('carousel')
 
@@ -254,64 +245,29 @@ function App() {
                 'api-key': SODEXO_API_KEY,
               },
             })
-
-            if (!response.ok) {
-              throw new Error(`Failed to load ${hallId} (HTTP ${response.status})`)
-            }
-
+            if (!response.ok) throw new Error(`Failed to load ${hallId} (HTTP ${response.status})`)
             const data = await response.json()
             if (!isActive) return
 
-            setMenuData((prev) => ({
-              ...prev,
-              [hallId]: { status: 'loaded', data: sanitizeRemoteMenu(data) },
-            }))
+            setMenuData(prev => ({ ...prev, [hallId]: { status: 'loaded', data: sanitizeRemoteMenu(data) } }))
           } catch (error) {
             if (!isActive) return
-            setMenuData((prev) => ({
-              ...prev,
-              [hallId]: { status: 'error', error: error.message },
-            }))
+            setMenuData(prev => ({ ...prev, [hallId]: { status: 'error', error: error.message } }))
           }
-        }),
+        })
       )
     }
 
     fetchMenus()
-
-    return () => {
-      isActive = false
-    }
+    return () => { isActive = false }
   }, [])
 
   const isAuthenticated = Boolean(userProfile)
-  const hasPersonalizedRankings = Boolean(userProfile)
-
-  const updateSignupField = (field, value) =>
-    setSignupForm((prev) => ({ ...prev, [field]: value }))
-
-  const handleSavePreferences = (event) => {
-    event.preventDefault()
-    const trimmedName = signupForm.name.trim() || 'ByteBiter'
-
-    const profile = {
-      name: trimmedName,
-      goal: signupForm.goal,
-      diet: signupForm.diet,
-      allergies: signupForm.allergies || [],
-    }
-
-    persistPreferences(profile)
-    setFeedback(`Preferences saved! Welcome, ${trimmedName.split(' ')[0]}!`)
-    setView('dining')
-  }
+  const hasLoadedMenus = Object.values(menuData).some(m => m.status === 'loaded')
 
   const hallRankings = useMemo(() => {
     if (!userProfile) return diningHalls
-    return diningHalls.map((hall) => {
-      const score = getMatchScore(hall, userProfile)
-      return { ...hall, score }
-    })
+    return diningHalls.map(hall => ({ ...hall, score: getMatchScore(hall, userProfile) }))
   }, [userProfile])
 
   const hallDisplayList = [...hallRankings].sort((a, b) => b.score - a.score)
@@ -325,62 +281,51 @@ function App() {
     <div className="app-shell">
       <nav className="top-nav">
         <div className="brand">
-          <img src="/ByteBiteOfficialv1.png"/>
+          <img src="/ByteBiteOfficialv1.png" alt="ByteBite"/>
           <div>
             <p className="eyebrow">ByteBite</p>
-            <div id="descLogo">
-              <strong>Campus Fuel Planner</strong>
-            </div>
+            <div id="descLogo"><strong>Campus Fuel Planner</strong></div>
           </div>
         </div>
-
         <div className="nav-actions">
-          <button
-            className={view === 'home' ? 'ghost-button ghost-button--active' : 'ghost-button'}
-            onClick={() => setView('home')}
-          >
-            Planner
-          </button>
-
-          <button
-            className={view === 'dining' ? 'ghost-button ghost-button--active' : 'ghost-button'}
-            onClick={() => setView('dining')}
-          >
-            Dining Halls
-          </button>
+          <button className={view==='home'?'ghost-button ghost-button--active':'ghost-button'} onClick={()=>setView('home')}>Planner</button>
+          <button className={view==='dining'?'ghost-button ghost-button--active':'ghost-button'} onClick={()=>setView('dining')}>Dining Halls</button>
         </div>
       </nav>
 
       {feedback && (
         <div className="inline-banner">
           <span>{feedback}</span>
-          <button onClick={() => setFeedback('')}>×</button>
+          <button onClick={()=>setFeedback('')}>×</button>
         </div>
       )}
 
       <header className="hero">
-        <HeroSection
-          onStartPlanning={() => setView('home')}
-          onSeeDining={() => setView('dining')}
-        />
+        <HeroSection onStartPlanning={()=>setView('home')} onSeeDining={()=>setView('dining')} />
       </header>
 
-      {view === 'home' && (
+      {view==='home' && (
         <HomePage
           signupForm={signupForm}
-          updateSignupField={updateSignupField}
-          handleSavePreferences={handleSavePreferences}
+          updateSignupField={(field,val)=>setSignupForm(prev=>({...prev,[field]:val}))}
+          handleSavePreferences={(e)=>{
+            e.preventDefault()
+            const profile={...signupForm,name:signupForm.name.trim()||'ByteBiter'}
+            persistPreferences(profile)
+            setFeedback(`Preferences saved! Welcome, ${profile.name.split(' ')[0]}!`)
+            setView('dining')
+          }}
           goalOptions={goalOptions}
           dietOptions={dietOptions}
-          heroPreview={diningHalls.slice(0, 3)}
-          onNavigateToDining={() => setView('dining')}
+          heroPreview={diningHalls.slice(0,3)}
+          onNavigateToDining={()=>setView('dining')}
         />
       )}
 
-      {view === 'dining' && (
+      {view==='dining' && (
         <DiningPage
           isAuthenticated={isAuthenticated}
-          hasPersonalizedRankings={hasPersonalizedRankings}
+          showPersonalizeButton={isAuthenticated && hasLoadedMenus}
           userProfile={userProfile}
           goalLabelMap={goalLabelMap}
           dietLabelMap={dietLabelMap}
@@ -389,16 +334,15 @@ function App() {
           onChangeHallViewMode={setHallViewMode}
           showCarousel={showCarousel}
           spotlightHall={spotlightHall}
-          goToPreviousHall={() => setHallSpotlightIndex((i) => (i - 1 + hallCount) % hallCount)}
-          goToNextHall={() => setHallSpotlightIndex((i) => (i + 1) % hallCount)}
+          goToPreviousHall={()=>setHallSpotlightIndex(i=>(i-1+hallCount)%hallCount)}
+          goToNextHall={()=>setHallSpotlightIndex(i=>(i+1)%hallCount)}
           hallSpotlightIndex={hallSpotlightIndex}
           hallsToRender={hallsToRender}
           standoutHallId={standoutHallId}
           menuData={menuData}
           flattenMenuItems={flattenMenuItems}
           maxMenuRows={MAX_MENU_ROWS}
-          onBackToPlanner={() => setView('home')}
-          onActivatePersonalization={() => {}}
+          onBackToPlanner={()=>setView('home')}
         />
       )}
 

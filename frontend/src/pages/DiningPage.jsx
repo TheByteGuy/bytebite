@@ -93,11 +93,9 @@ function DiningPage({
     [autoMenuData, menuData],
   )
 
-  // cache for filtered rows
   const filteredMenuCache = useMemo(() => new Map(), [])
 
   useEffect(() => {
-    // clear cached rows when menuData/halls change
     filteredMenuCache.clear()
   }, [menuData, hallsToRender, filteredMenuCache])
 
@@ -110,9 +108,7 @@ function DiningPage({
     .map((hall) => hall.name)
 
   const parseCalories = (value) => {
-    if (typeof value === 'number') {
-      return value
-    }
+    if (typeof value === 'number') return value
     const numericValue = parseInt(String(value ?? '').replace(/[^0-9-]/g, ''), 10)
     return Number.isNaN(numericValue) ? 0 : numericValue
   }
@@ -120,9 +116,7 @@ function DiningPage({
   const shouldIncludeMenuRow = (row) => {
     const textBlob = `${row.station ?? ''} ${row.name ?? ''}`.toLowerCase()
     const hasExcludedKeyword = textBlob.includes('bakery') || textBlob.includes('bliss')
-    if (hasExcludedKeyword) {
-      return false
-    }
+    if (hasExcludedKeyword) return false
     const calories = parseCalories(row.calories)
     return calories >= 100
   }
@@ -138,13 +132,9 @@ function DiningPage({
   }
 
   const getFilteredMenuRows = (hall) => {
-    if (!hall) {
-      return []
-    }
+    if (!hall) return []
 
-    if (filteredMenuCache.has(hall.id)) {
-      return filteredMenuCache.get(hall.id)
-    }
+    if (filteredMenuCache.has(hall.id)) return filteredMenuCache.get(hall.id)
 
     const hallMenu = (menuData ?? {})[hall.id]
     const rows =
@@ -163,11 +153,7 @@ function DiningPage({
 
   const renderSpotlightView = () => {
     if (!spotlightHall) {
-      return (
-        <div className="menu-note">
-          Select a hall to spotlight and see its full food lineup.
-        </div>
-      )
+      return <div className="menu-note">Select a hall to spotlight and see its full food lineup.</div>
     }
 
     const hallMenu = (menuData ?? {})[spotlightHall.id]
@@ -207,12 +193,7 @@ function DiningPage({
           </div>
           <div className="spotlight-heading__actions">
             <div className="carousel-controls carousel-controls--compact">
-              <button
-                type="button"
-                className="carousel-button"
-                onClick={goToPreviousHall}
-                aria-label="Show previous dining hall"
-              >
+              <button type="button" className="carousel-button" onClick={goToPreviousHall}>
                 Prev
               </button>
               <div className="carousel-status">
@@ -221,12 +202,7 @@ function DiningPage({
                 </strong>
                 <span>Halls</span>
               </div>
-              <button
-                type="button"
-                className="carousel-button"
-                onClick={goToNextHall}
-                aria-label="Show next dining hall"
-              >
+              <button type="button" className="carousel-button" onClick={goToNextHall}>
                 Next
               </button>
             </div>
@@ -260,29 +236,21 @@ function DiningPage({
               <span className="meta-label">Live menu </span>
               <strong>
                 {hallMenu?.status === 'loaded'
-                  ? `${hallMenuItems.length} dish${
-                      hallMenuItems.length === 1 ? '' : 'es'
-                    } today`
+                  ? `${hallMenuItems.length} dish${hallMenuItems.length === 1 ? '' : 'es'} today`
                   : 'Menu feed'}
               </strong>
             </div>
             {hallMenuItems.length > 0 && (
               <span className="menu-note">
-                Pulling every dish from today's sample JSON feed for {spotlightHall.name}.
+                Pulling every dish from today's feed for {spotlightHall.name}.
               </span>
             )}
           </div>
 
-          {!hallMenu && (
-            <p className="menu-note">Menu loads when you open this view.</p>
-          )}
-          {hallMenu?.status === 'loading' && (
-            <p className="menu-note">Pulling today's feed...</p>
-          )}
+          {!hallMenu && <p className="menu-note">Menu loads when you open this view.</p>}
+          {hallMenu?.status === 'loading' && <p className="menu-note">Pulling today's feed...</p>}
           {hallMenu?.status === 'error' && (
-            <p className="menu-note error-text">
-              Unable to load menu file: {hallMenu.error}
-            </p>
+            <p className="menu-note error-text">Unable to load menu file: {hallMenu.error}</p>
           )}
           {hallMenu?.status === 'loaded' && hallMenuItems.length === 0 && (
             <p className="menu-note">No menu items listed in the JSON yet.</p>
@@ -305,11 +273,7 @@ function DiningPage({
                   {addMealBreaks(hallMenuItems).map((row) => (
                     <tr
                       key={row.id}
-                      className={
-                        row.isMealStart
-                          ? 'menu-row menu-row--meal-start'
-                          : 'menu-row'
-                      }
+                      className={row.isMealStart ? 'menu-row menu-row--meal-start' : 'menu-row'}
                     >
                       <td>{row.meal}</td>
                       <td>{row.station}</td>
@@ -331,9 +295,7 @@ function DiningPage({
   const renderAllHallsTable = () => {
     const aggregatedRows = hallsToRender.flatMap((hall) => {
       const hallRows = getFilteredMenuRows(hall)
-      if (hallRows.length === 0) {
-        return []
-      }
+      if (hallRows.length === 0) return []
 
       return addMealBreaks(hallRows.slice(0, maxMenuRows)).map((row) => ({
         ...row,
@@ -385,11 +347,7 @@ function DiningPage({
                 {aggregatedRows.map((row) => (
                   <tr
                     key={`${row.hallId}-${row.id}`}
-                    className={
-                      row.isMealStart
-                        ? 'menu-row menu-row--meal-start'
-                        : 'menu-row'
-                    }
+                    className={row.isMealStart ? 'menu-row menu-row--meal-start' : 'menu-row'}
                   >
                     <td>
                       <div className="hall-col">
@@ -411,13 +369,9 @@ function DiningPage({
         ) : (
           <div className="menu-table-empty">
             {loadingHallCount > 0 ? (
-              <p className="menu-note">
-                Pulling menus for {loadingHallCount} hall(s)...
-              </p>
+              <p className="menu-note">Pulling menus for {loadingHallCount} hall(s)...</p>
             ) : (
-              <p className="menu-note">
-                Open a hall to trigger its food feed.
-              </p>
+              <p className="menu-note">Open a hall to trigger its food feed.</p>
             )}
           </div>
         )}
@@ -429,9 +383,7 @@ function DiningPage({
         )}
 
         {errorHallNames.length > 0 && (
-          <p className="menu-note error-text">
-            Unable to load menus for {errorHallNames.join(', ')}.
-          </p>
+          <p className="menu-note error-text">Unable to load menus for {errorHallNames.join(', ')}.</p>
         )}
       </section>
     )
