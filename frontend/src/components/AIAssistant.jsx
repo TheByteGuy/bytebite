@@ -81,12 +81,26 @@ ${JSON.stringify(menuJson || {}, null, 0)}
     setInput("");
     addMessage("user", input);
 
-    const shortPrompt = `
-USER REQUEST: ${input}
+    const lastUserMessage = [...messages]
+    .reverse()
+    .find(m => m.role === "user") || null;
 
-MENU DATA (JSON):
-${JSON.stringify(menuJson || {}, null, 0)}
-`;
+    let shortPrompt = `
+    USER REQUEST: "${input}"
+    `;
+
+    if (lastUserMessage) {
+      shortPrompt += `
+      LIMIT YOUR OUTPUT TO 5 SENTENCES
+    PREVIOUS USER MESSAGE: "${lastUserMessage.content}"
+    `;
+    }
+
+    shortPrompt += `
+    MENU DATA (JSON):
+    ${JSON.stringify(menuJson || {}, null, 0)}
+    `;
+        
 
     const resp = await fetch("https://bytebite-615j.onrender.com/generate", {
       method: "POST",
