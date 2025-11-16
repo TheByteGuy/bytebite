@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "../components/aiAssistant.css";
+import "../components/AIAssistant.css";
 import ReactMarkdown from "react-markdown";
 
 export default function AIAssistant() {
