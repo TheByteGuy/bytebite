@@ -52,26 +52,34 @@ async def generate_content(request: PromptRequest):
 # -------------------- New TTS endpoint --------------------
 @app.post("/tts")
 async def tts_endpoint(req: Request):
-    data = await req.json()
-    text = data.get("text")
-    if not text:
-        return {"error": "No text provided"}
+    try:
+        data = await req.json()
+        text = data.get("text")
+        if not text:
+            return {"error": "No text provided"}
 
-    url = f"https://api.elevenlabs.io/v1/text-to-speech/{VOICE_ID}/stream"
-    headers = {
-        "xi-api-key": ELEVEN_LABS_API_KEY,
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "text": text,
-        "model_id": "eleven_multilingual_v2",
-        "voice_settings": {"stability": 0.5, "similarity_boost": 0.5}
-    }
+        url = f"https://api.elevenlabs.io/v1/text-to-speech/{VOICE_ID}/stream"
+        headers = {
+            "xi-api-key": ELEVEN_LABS_API_KEY,
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "text": text,
+            "model_id": "eleven_multilingual_v2",
+            "voice_settings": {"stability": 0.5, "similarity_boost": 0.5}
+        }
 
-    async with httpx.AsyncClient() as client:
-        r = await client.post(url, headers=headers, json=payload)
-        if r.status_code != 200:
-            return {"error": f"TTS request failed: {r.status_code}"}
+        async with httpx.AsyncClient(timeout=None) as client:
+            r = await client.post(url, headers=headers, json=payload)
+            if r.status_code != 200:
+                return {"error": f"TTS request failed: {r.status_code}, {r.text}"}
 
-        # Stream audio directly to client
-        return StreamingResponse(r.aiter_bytes(), media_type="audio/mpeg")
+            # StreamingResponse with explicit CORS headers
+            return StreamingResponse(
+                r.aiter_bytes(),
+                media_type="audio/mpeg",
+                headers={"Access-Control-Allow-Origin": "*"}
+            )
+
+    except Exception as e:
+        return {"error": f"TTS server error: {str(e)}"}
