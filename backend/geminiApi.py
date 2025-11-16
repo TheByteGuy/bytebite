@@ -1,49 +1,49 @@
 from fastapi import FastAPI
-from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import httpx
-import os
+from google import genai
 from dotenv import load_dotenv
+import os
 
+# Load .env
 load_dotenv()
-ELEVEN_LABS_API_KEY = os.getenv("ELEVEN_LABS_API_KEY")
-VOICE_ID = "EXAVITQu4vr4xnSDxMaL"
+
+# Initialize Gemini client
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 app = FastAPI()
 
-class TTSRequest(BaseModel):
-    text: str
+# CORS setup (for React)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "https://bytebites.tech",
+        "http://localhost:5174",
+        "http://localhost:5173",
+        "http://127.0.0.1:3000",
+        "https://bytebite.vercel.app",        # your Vercel site
+        "https://bytebite-615j.onrender.com/", # your Render backend
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@app.post("/tts")
-async def tts_endpoint(req: TTSRequest):
-    if not req.text:
-        return JSONResponse(status_code=400, content={"error": "No text provided"})
+class PromptRequest(BaseModel):
+    prompt: str
 
-    url = f"https://api.elevenlabs.io/v1/text-to-speech/{VOICE_ID}"  # <-- remove /stream
-    headers = {
-        "xi-api-key": ELEVEN_LABS_API_KEY,
-        "Content-Type": "application/json",
-    }
-    payload = {
-        "text": req.text,
-        "model_id": "eleven_multilingual_v2",
-        "voice_settings": {"stability": 0.5, "similarity_boost": 0.5},
-    }
-
+@app.post("/generate")
+async def generate_content(request: PromptRequest):
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            r = await client.post(url, json=payload, headers=headers)
-            r.raise_for_status()
-
-            return StreamingResponse(
-                iter([r.content]),  # wrap full audio bytes in an iterator
-                media_type="audio/mpeg"
-            )
-
-    except httpx.HTTPStatusError as e:
-        return JSONResponse(
-            status_code=502,
-            content={"error": f"TTS request failed: {e.response.status_code}, {e.response.text}"}
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=request.prompt,
         )
+        return {"text": response.text}
     except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
+        return {"error": str(e)}
+
+# Run with:
+# uvicorn geminiApi:app --reload
+# To test, send a POST request to /generate with JSON body: {"prompt": "Your prompt here"}
