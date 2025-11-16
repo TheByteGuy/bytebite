@@ -131,6 +131,36 @@ const sanitizeRemoteMenu = (rawMenu) => {
 
 const MAX_MENU_ROWS = 6
 
+const MENU_CACHE_KEY = 'bytebite-menu-cache-v1'
+
+const menuCache = {
+  read() {
+    try {
+      const raw = localStorage.getItem(MENU_CACHE_KEY)
+      return raw ? JSON.parse(raw) : {}
+    } catch {
+      return {}
+    }
+  },
+  write(date, hallId, payload) {
+    try {
+      const existing = menuCache.read()
+      const next = { ...existing }
+
+      if (!next[date]) next[date] = {}
+      next[date][hallId] = {
+        savedAt: Date.now(),
+        data: payload,
+      }
+
+      localStorage.setItem(MENU_CACHE_KEY, JSON.stringify(next))
+    } catch {
+      // ignore write errors
+    }
+  },
+}
+
+
 const safeStorage = {
   read() {
     try {
@@ -223,20 +253,38 @@ function App() {
   useEffect(() => {
     let isActive = true
     const hallEntries = Object.entries(diningMenuSources)
+    const dateParam = new Date().toISOString().split('T')[0]
 
+    // --- read cached menus ---
+    const cached = menuCache.read()
+    const cachedForToday = cached[dateParam] || {}
+
+    // --- initialize menuData from cache OR mark as loading ---
     setMenuData(() => {
-      const initialState = {}
+      const initial = {}
       hallEntries.forEach(([hallId]) => {
-        initialState[hallId] = { status: 'loading' }
+        if (cachedForToday[hallId]?.data) {
+          initial[hallId] = {
+            status: 'loaded',
+            data: cachedForToday[hallId].data,
+          }
+        } else {
+          initial[hallId] = { status: 'loading' }
+        }
       })
-      return initialState
+      return initial
     })
 
+    // --- fetch only halls **not** in cache ---
     const fetchMenus = async () => {
-      const dateParam = new Date().toISOString().split('T')[0]
+      const hallsToFetch = hallEntries.filter(([hallId]) => {
+        return !cachedForToday[hallId]?.data
+      })
+
+      if (hallsToFetch.length === 0) return // everything already cached
 
       await Promise.all(
-        hallEntries.map(async ([hallId, source]) => {
+        hallsToFetch.map(async ([hallId, source]) => {
           try {
             const response = await fetch(buildMenuUrl(source, dateParam), {
               headers: {
@@ -246,13 +294,24 @@ function App() {
               },
             })
             if (!response.ok) throw new Error(`Failed to load ${hallId} (HTTP ${response.status})`)
-            const data = await response.json()
+            const raw = await response.json()
             if (!isActive) return
 
-            setMenuData(prev => ({ ...prev, [hallId]: { status: 'loaded', data: sanitizeRemoteMenu(data) } }))
-          } catch (error) {
+            const sanitized = sanitizeRemoteMenu(raw)
+
+            setMenuData(prev => ({
+              ...prev,
+              [hallId]: { status: 'loaded', data: sanitized }
+            }))
+
+            // --- write to cache ---
+            menuCache.write(dateParam, hallId, sanitized)
+          } catch (err) {
             if (!isActive) return
-            setMenuData(prev => ({ ...prev, [hallId]: { status: 'error', error: error.message } }))
+            setMenuData(prev => ({
+              ...prev,
+              [hallId]: { status: 'error', error: err.message }
+            }))
           }
         })
       )
