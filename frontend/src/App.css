@@ -13,6 +13,7 @@
   justify-content: space-between;
   align-items: center;
   padding-top: 0.25rem;
+  margin-bottom: -10px;
 }
 
 .brand {
@@ -20,20 +21,27 @@
   align-items: center;
   gap: 0.85rem;
   font-size: 1rem;
-}
-
-#logo {
-  height: 67px;
-  width: 88px;
+  height: 70px;
+  width: 70px;
   border-radius: 16px;
-  overflow: hidden;
   background: rgb(255, 255, 255);
 }
 
-#logo img {
-  height: 100%;
-  width: 100%;
+.brand img {
+  height: 73px;
+  width: 73px;
   object-fit: contain;
+}
+
+.brand div {
+  display: flex;
+  flex-direction: column;
+}
+
+#descLogo {
+  width: 100px;
+  font-size: 1rem;
+  color: #1e1129;
 }
 
 .eyebrow {
