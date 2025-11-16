@@ -475,6 +475,7 @@ function DiningPage({
             Back to planner
           </button>
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
             {isAuthenticated &&
               !hasPersonalizedRankings &&
               userProfile?.goal &&
@@ -484,6 +485,8 @@ function DiningPage({
                 (hall) => mergedMenuData[hall.id]?.status === "loaded"
               ) && (
 =======
+=======
+>>>>>>> Stashed changes
 
           {isAuthenticated &&
             !hasPersonalizedRankings &&
@@ -493,12 +496,16 @@ function DiningPage({
             hallsToRender.every(
               (hall) => mergedMenuData[hall.id]?.status === "loaded"
             ) && (
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
               <button
                 className="primary"
                 type="button"
                 onClick={async () => {
                   try {
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
                     // Convert your menu JSON into a compact string
                     const compactJSON = JSON.stringify(mergedMenuData, null, 0);
@@ -540,6 +547,8 @@ function DiningPage({
 
 
 =======
+=======
+>>>>>>> Stashed changes
                     const compactJSON = JSON.stringify(mergedMenuData, null, 0)
 
                     const prompt = `Rank RPI dining halls for this user based on their goal (${userProfile.goal}) and diet (${userProfile.diet}). Total=100%. 
@@ -574,6 +583,9 @@ Data: ${compactJSON}`
                 Personalize my rankings
               </button>
             )}
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
         </div>
       </div>
