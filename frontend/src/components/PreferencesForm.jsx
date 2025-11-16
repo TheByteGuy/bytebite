@@ -9,10 +9,17 @@ export default function PreferencesForm({
   dietOptions,
   handleAllergySelect,
 }) {
+  // Option for visual impairment (single pill)
+  const visuallyImpairedOptions = [
+    { label: "Visually Impaired Mode", value: true }
+  ];
+
   return (
     <section className="card auth-card preferences-card">
       <h2 className="preferences-title">Dining Preferences</h2>
-      <p className="preferences-subcopy">Customize your experience to get personalized meal rankings.</p>
+      <p className="preferences-subcopy">
+        Customize your experience to get personalized meal rankings.
+      </p>
 
       <form className="auth-form" onSubmit={handleSavePreferences}>
         <label className="input-field elegant-input">
@@ -53,10 +60,24 @@ export default function PreferencesForm({
           />
         </div>
 
+        {/* NEW: Visually Impaired Mode */}
+<div className="choice-field full-width-pill">
+  <span className="choice-label">Accessibility</span>
+
+  <ChoicePillRow
+    options={[{ label: "Visually Impaired Mode", value: true }]}
+    activeValue={signupForm.visuallyImpaired ? [true] : []}
+    onSelect={() =>
+      updateSignupField("visuallyImpaired", !signupForm.visuallyImpaired)
+    }
+  />
+</div>
+
+
         <button className="primary professional-btn" type="submit">
           Save My Preferences
         </button>
       </form>
     </section>
-  )
+  );
 }
