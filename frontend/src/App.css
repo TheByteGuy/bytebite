@@ -509,6 +509,11 @@ p.eyebrow {
   grid-template-columns: minmax(0, 1fr);
 }
 
+.hall-col {
+  display: flex;
+  flex-direction: column;
+}
+
 .hall-card {
   border: 1px solid rgba(var(--accent-rgb), 0.12);
   border-radius: 24px;
