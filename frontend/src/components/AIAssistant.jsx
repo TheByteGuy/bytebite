@@ -2,17 +2,19 @@ import { useState } from "react";
 import "../components/AIAssistant.css";
 import ReactMarkdown from "react-markdown";
 
-export default function AIAssistant() {
+export default function AIAssistant({ menuJson }) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
+  const [cooldown, setCooldown] = useState(false); // 1-second cooldown
 
   // helper to push messages into chat
   const addMessage = (role, content) => {
     setMessages(prev => [...prev, { role, content }]);
   };
-const sendPromptToGemini = async (prompt) => {
-  const shortPrompt = `
+
+  const sendPromptToGemini = async (prompt) => {
+    const shortPrompt = `
 You must respond in *no more than 3 short sentences*.  
 Absolutely DO NOT generate paragraphs, introductions, sections, bullet lists, or extended explanations.  
 Condense your answer as tightly as possible.
@@ -20,61 +22,68 @@ Condense your answer as tightly as possible.
 USER REQUEST: ${prompt}
 `;
 
-  const resp = await fetch("https://bytebite-615j.onrender.com/generate", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt: shortPrompt })
-  });
+    const resp = await fetch("https://bytebite-615j.onrender.com/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: shortPrompt })
+    });
 
-  const data = await resp.json();
-  addMessage("assistant", data.text || data.error || "No response.");
-};
+    const data = await resp.json();
+    addMessage("assistant", data.text || data.error || "No response.");
+  };
 
+  const handleQuickPrompt = (type) => {
+    if (cooldown) return; // ignore clicks during cooldown
+    setCooldown(true);
+    setTimeout(() => setCooldown(false), 1000); // reset cooldown after 1s
 
-
-    const handleQuickPrompt = (type) => {
     let prompt = "";
 
     if (type === "sustainable") {
       prompt = `
-  Give 2–3 short sustainable dining suggestions. Keep the entire response under 4 sentences.
-  `;
+Give 2–3 short sustainable dining suggestions. Keep the entire response under 4 sentences.
+`;
     }
 
     if (type === "relevant") {
       prompt = `
-  Give the top 3 most relevant meal suggestions for this user. 
-  `;
+Give the top 3 most relevant meal suggestions for this user.
+`;
     }
 
     addMessage("user", prompt);
-    sendPromptToGemini(prompt);
+
+    sendPromptToGemini(`
+${prompt}
+
+MENU DATA (JSON):
+${JSON.stringify(menuJson || {}, null, 0)}
+    `);
   };
 
+  const send = async () => {
+    if (!input.trim()) return;
 
- const send = async () => {
-  if (!input.trim()) return;
+    addMessage("user", input);
 
-  addMessage("user", input);
-
-  const shortPrompt = `
-
-
+    const shortPrompt = `
 USER REQUEST: ${input}
+
+MENU DATA (JSON):
+${JSON.stringify(menuJson || {}, null, 0)}
 `;
 
-  const resp = await fetch("https://bytebite-615j.onrender.com/generate", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt: shortPrompt })
-  });
+    const resp = await fetch("https://bytebite-615j.onrender.com/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt: shortPrompt })
+    });
 
-  const data = await resp.json();
-  addMessage("assistant", data.text || data.error || "No response.");
+    const data = await resp.json();
+    addMessage("assistant", data.text || data.error || "No response.");
 
-  setInput("");
-};
-
+    setInput("");
+  };
 
   return (
     <>
@@ -97,54 +106,49 @@ USER REQUEST: ${input}
           <div className="ai-messages">
             {messages.map((m, i) => (
               <div key={i} className={`ai-msg ai-${m.role}`}>
-              <ReactMarkdown>{m.content}</ReactMarkdown>
-            </div>
-
-
+                <ReactMarkdown>{m.content}</ReactMarkdown>
+              </div>
             ))}
           </div>
 
           <div className="ai-input-bar">
+            {/* Quick action buttons row */}
+            <div className="ai-quick-row">
+              <button
+                className="ai-quick-btn"
+                onClick={() => handleQuickPrompt("sustainable")}
+                disabled={cooldown}
+              >
+                ♻ Sustainable
+              </button>
 
-          {/* Quick action buttons row */}
-          <div className="ai-quick-row">
-            <button
-              className="ai-quick-btn"
-              onClick={() => handleQuickPrompt("sustainable")}
-            >
-              ♻ Sustainable
-            </button>
+              <button
+                className="ai-quick-btn"
+                onClick={() => handleQuickPrompt("relevant")}
+                disabled={cooldown}
+              >
+                ⭐ Most Relevant
+              </button>
+            </div>
 
-            <button
-              className="ai-quick-btn"
-              onClick={() => handleQuickPrompt("relevant")}
-            >
-              ⭐ Most Relevant
-            </button>
+            {/* Text input row */}
+            <div className="ai-input-row">
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    send();
+                  }
+                }}
+                placeholder="Ask about meals, nutrition, diets..."
+              />
+              <button className="send-btn" onClick={send}>
+                Send
+              </button>
+            </div>
           </div>
-
-          {/* Text input row */}
-          <div className="ai-input-row">
-            <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                send();
-              }
-            }}
-            placeholder="Ask about meals, nutrition, diets..."
-          />
-
-
-            <button className="send-btn" onClick={send}>
-              Send
-            </button>
-          </div>
-
-        </div>
-
         </div>
       )}
     </>

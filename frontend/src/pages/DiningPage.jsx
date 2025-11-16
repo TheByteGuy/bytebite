@@ -646,7 +646,7 @@ function DiningPage({
       )}
 
       {isCarouselActive ? renderSpotlightView() : renderAllHallsTable()}
-      <AIAssistant />
+      <AIAssistant menuJson={mergedMenuData} />
     </section>
   )
 }
