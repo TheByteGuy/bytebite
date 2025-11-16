@@ -133,6 +133,27 @@ function DiningPage({
   )
 
   const filteredMenuCache = useMemo(() => new Map(), [])
+    
+  useEffect(() => {
+    if (!spotlightHall || !parsedHalls) return;
+
+    const normalize = (str) => str?.trim().toLowerCase();
+    const spotlightName = normalize(spotlightHall.name);
+
+    // Try exact match first
+    let hallData = parsedHalls[spotlightHall.name];
+
+    if (!hallData) {
+      // Fallback: search for a key that is included in the spotlight name
+      hallData = Object.entries(parsedHalls).find(([key]) =>
+        spotlightName.includes(normalize(key))
+      )?.[1];
+    }
+
+    const percent = hallData?.percent ?? null;
+    setMatchPercent(percent);
+  }, [parsedHalls, spotlightHall]);
+
 
   useEffect(() => {
     filteredMenuCache.clear()
@@ -208,10 +229,12 @@ function DiningPage({
     const hallName = spotlightHall.name;
 
     // pull personalized AI % if available
+    const normalizedHallName = spotlightHall.name.split(' ')[0]; // match AI naming
     const hallMatchPercent =
-      hasPersonalizedRankings && parsedHalls[hallName]
-        ? parsedHalls[hallName].percent
+      hasPersonalizedRankings && parsedHalls[normalizedHallName]
+        ? parsedHalls[normalizedHallName].percent
         : null;
+
    const personalizationNote = hasPersonalizedRankings
       ? [
           matchesGoal ? `${goalLabelMap[userProfile.goal]} dishes on rotation` : null,
@@ -319,7 +342,7 @@ function DiningPage({
             >
               <div
                 style={{
-                  width: `${hallMatchPercent ?? 0}%`,
+                  width: `${matchPercent ?? 0}%`,
                   height: "100%",
                   background: "#4caf50",
                   transition: "width 0.5s ease",
@@ -328,8 +351,8 @@ function DiningPage({
             </div>
 
             <div className="percent-box">
-              {hallMatchPercent !== null
-                ? `${hallMatchPercent}% Match`
+              {matchPercent !== null
+                ? `${matchPercent}% Match`
                 : "Percent match not calculated yet"}
             </div>
 
@@ -561,14 +584,14 @@ function DiningPage({
                       Top3: food1, food2, food3
                       Data: ${compactJSON}`
 
-                    // const resp = await fetch("https://bytebite-615j.onrender.com/generate", {
-                    //   method: "POST",
-                    //   headers: { "Content-Type": "application/json" },
-                    //   body: JSON.stringify({ prompt }),
-                    // })
+                    const resp = await fetch("https://bytebite-615j.onrender.com/generate", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ prompt }),
+                    })
 
-                    //const data = await resp.json()
-                    const data = { text: "Commons: 30% Top3: Simply Roasted Carrots, White Rice, Roasted Corn Succotash\nSage: 25% Top3: French Fries, Penne Pasta, Marinara Sauce\nBarh: 25% Top3: Sesame Green Bean Salad, Shoestring fries, Home Fried Potatoes\nBlitman: 20% Top3: Fruit Salad, Garlic Bread, Hash Brown Patty" };
+                    const data = await resp.json()
+
                     if (data.text) {
                       alert("AI Ranking Result:\n\n" + data.text)
                       if (data.text) {
@@ -590,8 +613,8 @@ function DiningPage({
                           halls[hall] = { percent, top3 };
                         }
 
-                        console.log("Parsed AI results:", halls);
                         setParsedHalls(halls); // your state hook holding the halls
+                        
                       }
                     } else if (data.error) {
                       console.error("Gemini API error:", data.error)
