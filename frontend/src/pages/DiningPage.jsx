@@ -195,7 +195,7 @@ function DiningPage({
     pushChatMessages([
       {
         role: 'user',
-        content: `Personalize my dining hall rankings for goal "${userProfile.goal}" and diet "${userProfile.diet}".`,
+        content: `Give me a personalized list of dining hall items".`,
       },
     ])
     try {
