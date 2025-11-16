@@ -226,7 +226,7 @@ const flattenMenuItems = (rawMenu) => {
 
 function App() {
   const [view, setView] = useState('home')
-  const [signupForm, setSignupForm] = useState({ name: '', goal: '', diet: '', allergies: [] })
+  const [signupForm, setSignupForm] = useState({ name: '', goal: '', diet: '', allergies: [], visuallyImpaired: false, colorblindFriendly: false });
   const [userProfile, setUserProfile] = useState(null)
   const [feedback, setFeedback] = useState('')
   const [menuData, setMenuData] = useState({})

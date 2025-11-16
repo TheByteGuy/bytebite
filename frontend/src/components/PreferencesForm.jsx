@@ -60,18 +60,32 @@ export default function PreferencesForm({
           />
         </div>
 
-        {/* NEW: Visually Impaired Mode */}
-<div className="choice-field full-width-pill">
-  <span className="choice-label">Accessibility</span>
+        {/* NEW: Accessibility Modes */}
+        <div className="choice-field full-width-pill">
+          <span className="choice-label">Accessibility</span>
 
-  <ChoicePillRow
-    options={[{ label: "Visually Impaired Mode", value: true }]}
-    activeValue={signupForm.visuallyImpaired ? [true] : []}
-    onSelect={() =>
-      updateSignupField("visuallyImpaired", !signupForm.visuallyImpaired)
-    }
-  />
-</div>
+          <ChoicePillRow
+            options={[
+              { label: "Visually Impaired Mode", value: "visuallyImpaired" },
+              { label: "Colorblind-Friendly Mode", value: "colorblindFriendly" },
+            ]}
+            activeValue={[
+              ...(signupForm.visuallyImpaired ? ["visuallyImpaired"] : []),
+              ...(signupForm.colorblindFriendly ? ["colorblindFriendly"] : []),
+            ]}
+            onSelect={(value) => {
+              if (value === "visuallyImpaired") {
+                updateSignupField("visuallyImpaired", !signupForm.visuallyImpaired);
+              } else if (value === "colorblindFriendly") {
+                updateSignupField(
+                  "colorblindFriendly",
+                  !signupForm.colorblindFriendly
+                );
+              }
+            }}
+          />
+        </div>
+
 
 
         <button className="primary professional-btn" type="submit">
