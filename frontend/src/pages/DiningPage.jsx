@@ -165,6 +165,7 @@ function DiningPage({
 
   const [parsedHalls, setParsedHalls] = useState({});
   const [matchPercent, setMatchPercent] = useState(null);
+  const [isPersonalizing, setIsPersonalizing] = useState(false);
   const heroName = userProfile?.name?.split(' ')[0]
   const isCarouselActive = hallViewMode === 'carousel' && showCarousel
   const [autoMenuData, setAutoMenuData] = useState({})
@@ -175,6 +176,65 @@ function DiningPage({
   )
 
   const filteredMenuCache = useMemo(() => new Map(), [])
+  const readyForPersonalize =
+    isAuthenticated &&
+    !hasPersonalizedRankings &&
+    userProfile?.goal &&
+    userProfile?.diet &&
+    hallsToRender.length > 0 &&
+    hallsToRender.every((hall) => mergedMenuData[hall.id]?.status === 'loaded')
+
+  const handlePersonalizeRankings = async () => {
+    if (!readyForPersonalize || isPersonalizing) return
+    setIsPersonalizing(true)
+    try {
+      const compactJSON = JSON.stringify(mergedMenuData, null, 0)
+
+      const prompt = `Rank RPI dining halls for this user based on their goal (${userProfile.goal}) and diet (${userProfile.diet}). Total=100%. 
+                      For each hall, output exactly in this format and NO EXPLANATION:
+                      Hall: X%
+                      Top3: food1, food2, food3
+                      Data: ${compactJSON}`
+
+      const resp = await fetch('https://bytebite-615j.onrender.com/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      })
+
+      const data = await resp.json()
+
+      if (data.text) {
+        alert('AI Ranking Result:\n\n' + data.text)
+        const halls = {}
+        const regex = /(\w+):\s*(\d+)%[\s\S]*?Top3:\s*([^\n]+)/g
+
+        let match
+        while ((match = regex.exec(data.text)) !== null) {
+          const hall = match[1]
+          const percent = Number(match[2])
+          const top3 = match[3].split(',').map((s) => s.trim())
+
+          halls[hall] = { percent, top3 }
+        }
+
+        setParsedHalls(halls)
+
+        if (userProfile.visuallyImpaired) {
+          const speechText = `AI Ranking Result: ${data.text}`
+          await playStreamedAudio(speechText)
+        }
+      } else if (data.error) {
+        console.error('Gemini API error:', data.error)
+        alert('Gemini API error: ' + data.error)
+      }
+    } catch (err) {
+      console.error('Failed to call Gemini:', err)
+      alert('Failed to fetch AI ranking. See console for details.')
+    } finally {
+      setIsPersonalizing(false)
+    }
+  }
     
   useEffect(() => {
     if (!spotlightHall || !parsedHalls) return;
@@ -576,7 +636,10 @@ function DiningPage({
   }
 
   return (
-    <section className="dining-page">
+    <section
+      className={`dining-page ${isPersonalizing ? 'dining-page--loading' : ''}`}
+      aria-busy={isPersonalizing}
+    >
       <div className="dining-header">
         <div>
           <p className="eyebrow">Dining Explorer</p>
@@ -605,77 +668,16 @@ function DiningPage({
             Back to planner
           </button>
 
-          {isAuthenticated &&
-            !hasPersonalizedRankings &&
-            userProfile?.goal &&
-            userProfile?.diet &&
-            hallsToRender.length > 0 &&
-            hallsToRender.every(
-              (hall) => mergedMenuData[hall.id]?.status === "loaded"
-            ) && (
-              <button
-                className="primary"
-                type="button"
-                onClick={async () => {
-                  try {
-                    const compactJSON = JSON.stringify(mergedMenuData, null, 0)
-
-                    const prompt = `Rank RPI dining halls for this user based on their goal (${userProfile.goal}) and diet (${userProfile.diet}). Total=100%. 
-                      For each hall, output exactly in this format and NO EXPLANATION:
-                      Hall: X%
-                      Top3: food1, food2, food3
-                      Data: ${compactJSON}`
-
-                    const resp = await fetch("https://bytebite-615j.onrender.com/generate", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ prompt }),
-                    })
-
-                    const data = await resp.json()
-
-                    if (data.text) {
-                      alert("AI Ranking Result:\n\n" + data.text)
-                      if (data.text) {
-                        const halls = {};
-                        
-                        // Regex for full structure:
-                        // HallName: 30%
-                        // Top3: item1, item2, item3
-                        const regex = /(\w+):\s*(\d+)%[\s\S]*?Top3:\s*([^\n]+)/g;
-
-                        let match;
-                        while ((match = regex.exec(data.text)) !== null) {
-                          const hall = match[1];
-                          const percent = Number(match[2]);
-                          const top3 = match[3]
-                            .split(',')
-                            .map(s => s.trim());
-
-                          halls[hall] = { percent, top3 };
-                        }
-
-                        setParsedHalls(halls); // your state hook holding the halls
-
-                        if (userProfile.visuallyImpaired) {
-                          const speechText = `AI Ranking Result: ${data.text}`;
-                          await playStreamedAudio(speechText);
-                        }
-                        
-                      }
-                    } else if (data.error) {
-                      console.error("Gemini API error:", data.error)
-                      alert("Gemini API error: " + data.error)
-                    }
-                  } catch (err) {
-                    console.error("Failed to call Gemini:", err)
-                    alert("Failed to fetch AI ranking. See console for details.")
-                  }
-                }}
-              >
-                Personalize my rankings
-              </button>
-            )}
+          {readyForPersonalize && (
+            <button
+              className="primary"
+              type="button"
+              onClick={handlePersonalizeRankings}
+              disabled={isPersonalizing}
+            >
+              {isPersonalizing ? 'Personalizing…' : 'Personalize my rankings'}
+            </button>
+          )}
         </div>
       </div>
 
@@ -717,6 +719,16 @@ function DiningPage({
 
       {isCarouselActive ? renderSpotlightView() : renderAllHallsTable()}
       <AIAssistant menuJson={mergedMenuData} />
+
+      {isPersonalizing && (
+        <div className="personalize-overlay" role="status" aria-live="assertive">
+          <div className="personalize-card">
+            <div className="personalize-spinner" aria-hidden="true" />
+            <p>Please wait while we load your personalized rankings.</p>
+            <small>We're crunching menus, macros, and your goals.</small>
+          </div>
+        </div>
+      )}
     </section>
   )
 }
