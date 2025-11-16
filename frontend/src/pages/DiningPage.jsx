@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import AIAssistant from "../components/AIAssistant";
-
 const SAMPLE_MENU_BLUEPRINT = [
   {
     meal: 'Breakfast',
@@ -79,12 +78,14 @@ function DiningPage({
   goToPreviousHall,
   goToNextHall,
   onBackToPlanner,
-  onActivatePersonalization,
   menuData,
   flattenMenuItems,
   standoutHallId,
   maxMenuRows,
 }) {
+
+  const [parsedHalls, setParsedHalls] = useState({});
+  const [matchPercent, setMatchPercent] = useState(null);
   const heroName = userProfile?.name?.split(' ')[0]
   const isCarouselActive = hallViewMode === 'carousel' && showCarousel
   const [autoMenuData, setAutoMenuData] = useState({})
@@ -167,8 +168,14 @@ function DiningPage({
       hasPersonalizedRankings && spotlightHall.goalFocus.includes(userProfile.goal)
     const matchesDiet =
       hasPersonalizedRankings && spotlightHall.dietOptions.includes(userProfile.diet)
-    const matchPercent = hasPersonalizedRankings ? spotlightHall.matchPercent ?? 0 : null
-    const personalizationNote = hasPersonalizedRankings
+    const hallName = spotlightHall.name;
+
+    // pull personalized AI % if available
+    const hallMatchPercent =
+      hasPersonalizedRankings && parsedHalls[hallName]
+        ? parsedHalls[hallName].percent
+        : null;
+   const personalizationNote = hasPersonalizedRankings
       ? [
           matchesGoal ? `${goalLabelMap[userProfile.goal]} dishes on rotation` : null,
           matchesDiet
@@ -262,12 +269,33 @@ function DiningPage({
 
         {/* MATCH BAR ROW RIGHT ABOVE TABLE */}
         <div style={{ marginBottom: "1rem" }}>
-          <div
-            className={`match-chip ${
-              standoutHallId === spotlightHall.id ? "match-chip--primary" : ""
-            }`.trim()}
-          >
-            {hasPersonalizedRankings ? `${matchPercent}% match` : "Neutral favorite"}
+          <div style={{ marginBottom: "1rem" }}>
+
+            <div
+              style={{
+                height: "12px",
+                width: "100%",
+                background: "#eee",
+                borderRadius: "6px",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  width: `${hallMatchPercent ?? 0}%`,
+                  height: "100%",
+                  background: "#4caf50",
+                  transition: "width 0.5s ease",
+                }}
+              />
+            </div>
+
+            <div className="percent-box">
+              {hallMatchPercent !== null
+                ? `${hallMatchPercent}% Match`
+                : "Percent match not calculated yet"}
+            </div>
+
           </div>
         </div>
 
@@ -491,28 +519,47 @@ function DiningPage({
                     const compactJSON = JSON.stringify(mergedMenuData, null, 0)
 
                     const prompt = `Rank RPI dining halls for this user based on their goal (${userProfile.goal}) and diet (${userProfile.diet}). Total=100%. 
-For each hall, output exactly in this format:
-Hall: X%
-Top3: food1, food2, food3
-Data: ${compactJSON}`
+                      For each hall, output exactly in this format and NO EXPLANATION:
+                      Hall: X%
+                      Top3: food1, food2, food3
+                      Data: ${compactJSON}`
 
-                    const resp = await fetch("https://bytebite-bq4x.onrender.com/generate", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ prompt }),
-                    })
+                    // const resp = await fetch("https://bytebite-bq4x.onrender.com/generate", {
+                    //   method: "POST",
+                    //   headers: { "Content-Type": "application/json" },
+                    //   body: JSON.stringify({ prompt }),
+                    // })
 
-                    const data = await resp.json()
-
+                    //const data = await resp.json()
+                    const data = { text: "Commons: 30% Top3: Simply Roasted Carrots, White Rice, Roasted Corn Succotash\nSage: 25% Top3: French Fries, Penne Pasta, Marinara Sauce\nBarh: 25% Top3: Sesame Green Bean Salad, Shoestring fries, Home Fried Potatoes\nBlitman: 20% Top3: Fruit Salad, Garlic Bread, Hash Brown Patty" };
                     if (data.text) {
                       alert("AI Ranking Result:\n\n" + data.text)
+                      if (data.text) {
+                        const halls = {};
+                        
+                        // Regex for full structure:
+                        // HallName: 30%
+                        // Top3: item1, item2, item3
+                        const regex = /(\w+):\s*(\d+)%[\s\S]*?Top3:\s*([^\n]+)/g;
+
+                        let match;
+                        while ((match = regex.exec(data.text)) !== null) {
+                          const hall = match[1];
+                          const percent = Number(match[2]);
+                          const top3 = match[3]
+                            .split(',')
+                            .map(s => s.trim());
+
+                          halls[hall] = { percent, top3 };
+                        }
+
+                        console.log("Parsed AI results:", halls);
+                        setParsedHalls(halls); // your state hook holding the halls
+                      }
                     } else if (data.error) {
                       console.error("Gemini API error:", data.error)
                       alert("Gemini API error: " + data.error)
                     }
-
-                    // Keep the original personalization behavior
-                    onActivatePersonalization()
                   } catch (err) {
                     console.error("Failed to call Gemini:", err)
                     alert("Failed to fetch AI ranking. See console for details.")
