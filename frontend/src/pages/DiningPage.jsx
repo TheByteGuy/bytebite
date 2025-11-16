@@ -420,21 +420,28 @@ function DiningPage({
           <button className="ghost-button" type="button" onClick={onBackToPlanner}>
             Back to planner
           </button>
-{isAuthenticated && !hasPersonalizedRankings && (
-  <button
-    className="primary"
-    type="button"
-    onClick={async () => {
-      try {
-        // Convert your menu JSON into a compact string
-        const compactJSON = JSON.stringify(mergedMenuData, null, 0);
+            {isAuthenticated &&
+              !hasPersonalizedRankings &&
+              userProfile?.goal &&
+              userProfile?.diet &&
+              hallsToRender.length > 0 &&
+              hallsToRender.every(
+                (hall) => mergedMenuData[hall.id]?.status === "loaded"
+              ) && (
+              <button
+                className="primary"
+                type="button"
+                onClick={async () => {
+                  try {
+                    // Convert your menu JSON into a compact string
+                    const compactJSON = JSON.stringify(mergedMenuData, null, 0);
 
-        // Build the prompt for Gemini
-        const prompt = `Rank RPI dining halls for this user based on their goal (${userProfile.goal}) and diet (${userProfile.diet}). Total=100%. 
-For each hall, output exactly in this format:
-Hall: X%
-Top3: food1, food2, food3
-Data: ${compactJSON}`;
+                    // Build the prompt for Gemini
+                    const prompt = `Rank RPI dining halls for this user based on their goal (${userProfile.goal}) and diet (${userProfile.diet}). Total=100%. 
+            For each hall, output exactly in this format:
+            Hall: X%
+            Top3: food1, food2, food3
+            Data: ${compactJSON}`;
 
         // Call Gemini via your API endpoint
         const resp = await fetch("https://bytebite-bq4x.onrender.com/generate", {
