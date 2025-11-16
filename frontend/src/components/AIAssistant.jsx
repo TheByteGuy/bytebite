@@ -1,36 +1,83 @@
 import { useState } from "react";
+import "../components/AIAssistant.css";
+import ReactMarkdown from "react-markdown";
 
 export default function AIAssistant() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
 
-  const send = async () => {
-    if (!input.trim()) return;
-
-    const userMsg = { role: "user", content: input };
-    setMessages((prev) => [...prev, userMsg]);
-
-    // --- replace with your AI API ---
-    const resp = await fetch("/api/ai", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: [...messages, userMsg] }),
-    });
-
-    const data = await resp.json();
-
-    setMessages((prev) => [
-      ...prev,
-      { role: "assistant", content: data.reply },
-    ]);
-
-    setInput("");
+  // helper to push messages into chat
+  const addMessage = (role, content) => {
+    setMessages(prev => [...prev, { role, content }]);
   };
+const sendPromptToGemini = async (prompt) => {
+  const shortPrompt = `
+You must respond in *no more than 3 short sentences*.  
+Absolutely DO NOT generate paragraphs, introductions, sections, bullet lists, or extended explanations.  
+Condense your answer as tightly as possible.
+
+USER REQUEST: ${prompt}
+`;
+
+  const resp = await fetch("https://bytebite-bq4x.onrender.com/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt: shortPrompt })
+  });
+
+  const data = await resp.json();
+  addMessage("assistant", data.text || data.error || "No response.");
+};
+
+
+
+    const handleQuickPrompt = (type) => {
+    let prompt = "";
+
+    if (type === "sustainable") {
+      prompt = `
+  Give 2–3 short sustainable dining suggestions. Keep the entire response under 4 sentences.
+  `;
+    }
+
+    if (type === "relevant") {
+      prompt = `
+  Give the top 3 most relevant meal suggestions for this user. 
+  `;
+    }
+
+    addMessage("user", prompt);
+    sendPromptToGemini(prompt);
+  };
+
+
+ const send = async () => {
+  if (!input.trim()) return;
+
+  addMessage("user", input);
+
+  const shortPrompt = `
+
+
+USER REQUEST: ${input}
+`;
+
+  const resp = await fetch("https://bytebite-bq4x.onrender.com/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt: shortPrompt })
+  });
+
+  const data = await resp.json();
+  addMessage("assistant", data.text || data.error || "No response.");
+
+  setInput("");
+};
+
 
   return (
     <>
-      {/* 🌟 Floating activation button */}
       {!open && (
         <button
           className="ai-fab"
@@ -40,7 +87,6 @@ export default function AIAssistant() {
         </button>
       )}
 
-      {/* 🌟 Sidebar itself */}
       {open && (
         <div className="ai-sidebar">
           <div className="ai-sidebar-header">
@@ -51,19 +97,54 @@ export default function AIAssistant() {
           <div className="ai-messages">
             {messages.map((m, i) => (
               <div key={i} className={`ai-msg ai-${m.role}`}>
-                {m.content}
-              </div>
+              <ReactMarkdown>{m.content}</ReactMarkdown>
+            </div>
+
+
             ))}
           </div>
 
-          <div className="ai-input">
-            <input
-              value={input}
-              placeholder="Ask about meals, nutrition, diets..."
-              onChange={(e) => setInput(e.target.value)}
-            />
-            <button onClick={send}>Send</button>
+          <div className="ai-input-bar">
+
+          {/* Quick action buttons row */}
+          <div className="ai-quick-row">
+            <button
+              className="ai-quick-btn"
+              onClick={() => handleQuickPrompt("sustainable")}
+            >
+              ♻ Sustainable
+            </button>
+
+            <button
+              className="ai-quick-btn"
+              onClick={() => handleQuickPrompt("relevant")}
+            >
+              ⭐ Most Relevant
+            </button>
           </div>
+
+          {/* Text input row */}
+          <div className="ai-input-row">
+            <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                send();
+              }
+            }}
+            placeholder="Ask about meals, nutrition, diets..."
+          />
+
+
+            <button className="send-btn" onClick={send}>
+              Send
+            </button>
+          </div>
+
+        </div>
+
         </div>
       )}
     </>
