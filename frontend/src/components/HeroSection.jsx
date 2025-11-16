@@ -3,7 +3,7 @@ export default function HeroSection({ onStartPlanning, onSeeDining }) {
     <header className="hero">
       <div>
         <p className="eyebrow">Build a smarter dining routine</p>
-        <h1>Save your goals and diet—get instant personalized rankings.</h1>
+        <h1>Save your goals and diet. Get instant personalized rankings!</h1>
         <p className="hero-copy">
           ByteBite ranks every dining hall based on your goals and dietary style as soon as you save your preferences.
         </p>

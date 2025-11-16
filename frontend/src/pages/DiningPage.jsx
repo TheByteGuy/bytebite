@@ -710,8 +710,8 @@ function DiningPage({
             {hasPersonalizedRankings
               ? `${heroName}'s personalized lineup`
               : isAuthenticated
-              ? 'Neutral campus lineup - signed in'
-              : 'Neutral campus lineup'}
+              ? 'Campus menu - signed in'
+              : 'Campus menu - guest view'}
           </h2>
           <p>
             {hasPersonalizedRankings
