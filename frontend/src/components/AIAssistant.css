@@ -75,6 +75,16 @@
 .send-btn:hover {
   opacity: 0.85;
 }
+
+.colorblind-friendly .send-btn {
+  background: var(--accent-gradient);
+  color: black;
+}
+
+.colorblind-friendly .send-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
 .ai-assistant {
   align-self: flex-start;
   background: #f3f3f8;
@@ -94,4 +104,9 @@
   max-width: 75%;
   margin-bottom: 0.5rem;
   box-shadow: 0 2px 5px rgba(0,0,0,0.12);
+}
+
+.colorblind-friendly .ai-user {
+  background: var(--accent-gradient);
+  color: black;
 }
