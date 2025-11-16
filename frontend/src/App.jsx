@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 import HomePage from './pages/HomePage'
 import DiningPage from './pages/DiningPage'
@@ -84,11 +84,49 @@ const diningHalls = [
   },
 ]
 
-const menuFileMap = {
-  commons: '/menus/commons.json',
-  sage: '/menus/sage.json',
-  barh: '/menus/barh.json',
-  blitman: '/menus/blitman.json',
+const SODEXO_MENU_API_BASE = 'https://api-prd.sodexomyway.net/v0.2/data/menu'
+const SODEXO_API_KEY = '68717828-b754-420d-9488-4c37cb7d7ef7'
+
+const diningMenuSources = {
+  commons: { locationId: '76929001', menuId: '153148' },
+  sage: { locationId: '76929002', menuId: '153157' },
+  barh: { locationId: '76929003', menuId: '153626' },
+  blitman: { locationId: '76929015', menuId: '153702' },
+}
+
+const EXCLUDED_MENU_GROUPS = new Set(['bakery', 'dessert', 'beverages', 'bliss'])
+
+const buildMenuUrl = (source, dateString) =>
+  `${SODEXO_MENU_API_BASE}/${source.locationId}/${source.menuId}?date=${dateString}`
+
+const sanitizeRemoteMenu = (rawMenu) => {
+  const meals = Array.isArray(rawMenu) ? rawMenu : rawMenu?.meals ?? []
+
+  const sanitizedMeals = meals
+    .map((meal) => {
+      const groups = (meal?.groups ?? [])
+        .filter((group) => {
+          if (!group?.name) return false
+          const normalizedName = String(group.name).trim().toLowerCase()
+          return !EXCLUDED_MENU_GROUPS.has(normalizedName)
+        })
+        .map((group) => ({
+          ...group,
+          items: (group?.items ?? []).map((item, idx) => ({
+            ...item,
+            menuItemId: item?.menuItemId ?? idx,
+          })),
+        }))
+        .filter((group) => (group?.items ?? []).length > 0)
+
+      return groups.length > 0 ? { ...meal, groups } : null
+    })
+    .filter(Boolean)
+
+  return {
+    ...(Array.isArray(rawMenu) ? {} : rawMenu),
+    meals: sanitizedMeals,
+  }
 }
 
 const MAX_MENU_ROWS = 6
@@ -172,7 +210,6 @@ function App() {
   const [userProfile, setUserProfile] = useState(null)
   const [feedback, setFeedback] = useState('')
   const [menuData, setMenuData] = useState({})
-  const menuDataRef = useRef(menuData)
 
   const [hallSpotlightIndex, setHallSpotlightIndex] = useState(0)
   const [hallViewMode, setHallViewMode] = useState('carousel')
@@ -193,24 +230,59 @@ function App() {
   }, [])
 
   useEffect(() => {
-    menuDataRef.current = menuData
-  }, [menuData])
+    let isActive = true
+    const hallEntries = Object.entries(diningMenuSources)
 
-  useEffect(() => {
-    if (view !== 'dining') return
-    const pending = diningHalls.filter((h) => !menuDataRef.current[h.id])
-    pending.forEach((hall) => {
-      setMenuData((p) => ({ ...p, [hall.id]: { status: 'loading' } }))
-      fetch(menuFileMap[hall.id])
-        .then(r => r.json())
-        .then((data) =>
-          setMenuData((p) => ({ ...p, [hall.id]: { status: 'loaded', data } }))
-        )
-        .catch(() =>
-          setMenuData((p) => ({ ...p, [hall.id]: { status: 'error' } }))
-        )
+    setMenuData(() => {
+      const initialState = {}
+      hallEntries.forEach(([hallId]) => {
+        initialState[hallId] = { status: 'loading' }
+      })
+      return initialState
     })
-  }, [view])
+
+    const fetchMenus = async () => {
+      const dateParam = new Date().toISOString().split('T')[0]
+
+      await Promise.all(
+        hallEntries.map(async ([hallId, source]) => {
+          try {
+            const response = await fetch(buildMenuUrl(source, dateParam), {
+              headers: {
+                accept: 'application/json',
+                'content-type': 'application/json',
+                'api-key': SODEXO_API_KEY,
+              },
+            })
+
+            if (!response.ok) {
+              throw new Error(`Failed to load ${hallId} (HTTP ${response.status})`)
+            }
+
+            const data = await response.json()
+            if (!isActive) return
+
+            setMenuData((prev) => ({
+              ...prev,
+              [hallId]: { status: 'loaded', data: sanitizeRemoteMenu(data) },
+            }))
+          } catch (error) {
+            if (!isActive) return
+            setMenuData((prev) => ({
+              ...prev,
+              [hallId]: { status: 'error', error: error.message },
+            }))
+          }
+        }),
+      )
+    }
+
+    fetchMenus()
+
+    return () => {
+      isActive = false
+    }
+  }, [])
 
   const isAuthenticated = Boolean(userProfile)
   const hasPersonalizedRankings = Boolean(userProfile)
