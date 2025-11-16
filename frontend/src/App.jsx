@@ -251,6 +251,17 @@ function App() {
   }, [])
 
   useEffect(() => {
+  if (!feedback) return
+
+  const timer = setTimeout(() => {
+    setFeedback('')
+  }, 3000)
+
+  return () => clearTimeout(timer)
+}, [feedback])
+
+
+  useEffect(() => {
     let isActive = true
     const hallEntries = Object.entries(diningMenuSources)
     const dateParam = new Date().toISOString().split('T')[0]
