@@ -200,12 +200,21 @@ function DiningPage({
     ])
     try {
       const compactJSON = JSON.stringify(mergedMenuData, null, 0)
+      console.log(userProfile);
+      const prompt =`Rank RPI dining halls for this user. Total must equal 100%.
+                      User Profile:
+                      - Goal: ${userProfile.goal} weight
+                      - Diet: ${userProfile.diet}
+                      - Allergies: ${userProfile.allergies?.join(", ") || "none"}
 
-      const prompt = `Rank RPI dining halls for this user based on their goal (${userProfile.goal}) and diet (${userProfile.diet}). Total=100%. 
-                      For each hall, output exactly in this format and NO EXPLANATION:
+                      Use these constraints to rank dining halls.  
+                      Output EXACTLY in this format for EACH hall — no extra text, no explanations:
+
                       Hall: X%
                       Top3: food1, food2, food3
-                      Data: ${compactJSON}`
+
+                      Data: ${compactJSON}
+                      `;
 
       const resp = await fetch('https://bytebite-615j.onrender.com/generate', {
         method: 'POST',
@@ -214,6 +223,7 @@ function DiningPage({
       })
 
       const data = await resp.json()
+      
 
       if (data.text) {
         const halls = {}
