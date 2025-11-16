@@ -78,7 +78,7 @@ ${JSON.stringify(menuJson || {}, null, 0)}
 
   const send = async () => {
     if (!input.trim()) return;
-
+    setInput("");
     addMessage("user", input);
 
     const shortPrompt = `
@@ -153,6 +153,7 @@ ${JSON.stringify(menuJson || {}, null, 0)}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
+                    setInput("");
                     e.preventDefault();
                     send();
                   }
