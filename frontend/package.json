@@ -3,9 +3,11 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "homepage": "https://alexcavoli.github.io/frontend",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "deploy": "vite build && git subtree push --prefix dist origin gh-pages",
     "lint": "eslint .",
     "preview": "vite preview"
   },
