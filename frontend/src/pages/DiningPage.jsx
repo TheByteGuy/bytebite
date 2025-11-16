@@ -330,11 +330,21 @@ function DiningPage({
     if (filteredMenuCache.has(hall.id)) return filteredMenuCache.get(hall.id)
 
     const hallMenu = (menuData ?? {})[hall.id]
-    const rows =
+    let rows =
       hallMenu?.status === 'loaded'
         ? flattenMenuItems(hallMenu.data).filter(shouldIncludeMenuRow)
         : []
 
+          const blockedAllergens = userProfile?.allergies?.map(a => a.toLowerCase()) ?? []
+
+    if (blockedAllergens.length > 0) {
+      rows = rows.filter((row) => {
+        const allergenStr = row.allergens?.toLowerCase() ?? ""
+
+        // remove row if any blocked allergen appears in the allergens string
+        return !blockedAllergens.some((bad) => allergenStr.includes(bad))
+      })
+    }
     filteredMenuCache.set(hall.id, rows)
     return rows
   }
