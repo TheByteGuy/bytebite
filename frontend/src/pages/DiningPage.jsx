@@ -94,6 +94,48 @@ const buildSyntheticMenu = (hall) => {
   }))
 }
 
+async function playStreamedAudio(text) {
+  if (!text) return;
+  const API_KEY = "";
+  const VOICE_ID = "EXAVITQu4vr4xnSDxMaL"; // Or pick your preferred voice
+
+  try {
+    const response = await fetch(
+      `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}/stream`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "xi-api-key": API_KEY,
+        },
+        body: JSON.stringify({
+          text,
+          model_id: "eleven_multilingual_v2",
+          voice_settings: { stability: 0.5, similarity_boost: 0.5 },
+        }),
+      }
+    );
+
+    if (!response.ok) throw new Error(`TTS request failed: ${response.status}`);
+
+    const reader = response.body.getReader();
+    const audioChunks = [];
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      audioChunks.push(value);
+    }
+
+    const audioBlob = new Blob(audioChunks, { type: "audio/mpeg" });
+    const audioUrl = URL.createObjectURL(audioBlob);
+    const audio = new Audio(audioUrl);
+    audio.play();
+  } catch (err) {
+    console.error("ElevenLabs TTS error:", err);
+  }
+}
+
 const simulateMenuLoad = async (hall) => {
   await new Promise((resolve) => setTimeout(resolve, MENU_AUTOMATION_DELAY))
   return buildSyntheticMenu(hall)
@@ -614,6 +656,11 @@ function DiningPage({
                         }
 
                         setParsedHalls(halls); // your state hook holding the halls
+
+                        if (userProfile.visuallyImpaired) {
+                          const speechText = `AI Ranking Result: ${data.text}`;
+                          await playStreamedAudio(speechText);
+                        }
                         
                       }
                     } else if (data.error) {
