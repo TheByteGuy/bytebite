@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "../components/AIAssistant.css";
 import ReactMarkdown from "react-markdown";
 
-export default function AIAssistant({ menuJson }) {
+export default function AIAssistant({ menuJson, externalMessages = [], onConsumeExternalMessages }) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -12,6 +12,14 @@ export default function AIAssistant({ menuJson }) {
   const addMessage = (role, content) => {
     setMessages(prev => [...prev, { role, content }]);
   };
+
+  useEffect(() => {
+    if (!externalMessages || externalMessages.length === 0) return;
+    setMessages(prev => [...prev, ...externalMessages]);
+    if (onConsumeExternalMessages) {
+      onConsumeExternalMessages();
+    }
+  }, [externalMessages, onConsumeExternalMessages]);
 
   const sendPromptToGemini = async (prompt) => {
     const shortPrompt = `

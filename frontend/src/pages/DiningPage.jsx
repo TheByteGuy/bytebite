@@ -96,7 +96,7 @@ const buildSyntheticMenu = (hall) => {
 
 async function playStreamedAudio(text) {
   if (!text) return;
-  const API_KEY = "";
+  const API_KEY = "sk_c1c16e8664ffd9ccbd249451e904c69324d233c7757ca2ce";
   const VOICE_ID = "EXAVITQu4vr4xnSDxMaL"; // Or pick your preferred voice
 
   try {
@@ -166,6 +166,7 @@ function DiningPage({
   const [parsedHalls, setParsedHalls] = useState({});
   const [matchPercent, setMatchPercent] = useState(null);
   const [isPersonalizing, setIsPersonalizing] = useState(false);
+  const [pendingChatMessages, setPendingChatMessages] = useState([]);
   const heroName = userProfile?.name?.split(' ')[0]
   const isCarouselActive = hallViewMode === 'carousel' && showCarousel
   const [autoMenuData, setAutoMenuData] = useState({})
@@ -184,9 +185,19 @@ function DiningPage({
     hallsToRender.length > 0 &&
     hallsToRender.every((hall) => mergedMenuData[hall.id]?.status === 'loaded')
 
+  const pushChatMessages = (entries) => {
+    setPendingChatMessages((previous) => [...previous, ...entries])
+  }
+
   const handlePersonalizeRankings = async () => {
     if (!readyForPersonalize || isPersonalizing) return
     setIsPersonalizing(true)
+    pushChatMessages([
+      {
+        role: 'user',
+        content: `Personalize my dining hall rankings for goal "${userProfile.goal}" and diet "${userProfile.diet}".`,
+      },
+    ])
     try {
       const compactJSON = JSON.stringify(mergedMenuData, null, 0)
 
@@ -205,7 +216,6 @@ function DiningPage({
       const data = await resp.json()
 
       if (data.text) {
-        alert('AI Ranking Result:\n\n' + data.text)
         const halls = {}
         const regex = /(\w+):\s*(\d+)%[\s\S]*?Top3:\s*([^\n]+)/g
 
@@ -222,15 +232,26 @@ function DiningPage({
 
         if (userProfile.visuallyImpaired) {
           const speechText = `AI Ranking Result: ${data.text}`
-          await playStreamedAudio(speechText)
+          playStreamedAudio(speechText)
         }
+
+        pushChatMessages([
+          {
+            role: 'assistant',
+            content: `Here are your personalized rankings:\n\n${data.text}`,
+          },
+        ])
       } else if (data.error) {
         console.error('Gemini API error:', data.error)
-        alert('Gemini API error: ' + data.error)
+        pushChatMessages([
+          { role: 'assistant', content: `Gemini API error: ${data.error}` },
+        ])
       }
     } catch (err) {
       console.error('Failed to call Gemini:', err)
-      alert('Failed to fetch AI ranking. See console for details.')
+      pushChatMessages([
+        { role: 'assistant', content: 'Failed to fetch AI ranking. Please try again later.' },
+      ])
     } finally {
       setIsPersonalizing(false)
     }
@@ -718,7 +739,11 @@ function DiningPage({
       )}
 
       {isCarouselActive ? renderSpotlightView() : renderAllHallsTable()}
-      <AIAssistant menuJson={mergedMenuData} />
+      <AIAssistant
+        menuJson={mergedMenuData}
+        externalMessages={pendingChatMessages}
+        onConsumeExternalMessages={() => setPendingChatMessages([])}
+      />
 
       {isPersonalizing && (
         <div className="personalize-overlay" role="status" aria-live="assertive">
