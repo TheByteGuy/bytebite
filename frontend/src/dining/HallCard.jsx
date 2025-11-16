@@ -1,3 +1,4 @@
+import { useState } from "react";
 import MenuSection from "./MenuSection";
 import PersonalNote from "./PersonalNote";
 
@@ -13,6 +14,9 @@ export default function HallCard({
   maxMenuRows,
   spotlightHall,
 }) {
+  const [showHighlights, setShowHighlights] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+
   const matchesGoal =
     hasPersonalizedRankings && hall.goalFocus.includes(userProfile.goal);
 
@@ -24,13 +28,6 @@ export default function HallCard({
   const hallMenu = menuData[hall.id];
   const hallMenuItems = flattenMenuItems(hallMenu?.data);
 
-  const shouldShowFullMenu =
-    spotlightHall && spotlightHall.id === hall.id;
-
-  const menuRows = shouldShowFullMenu
-    ? hallMenuItems
-    : hallMenuItems.slice(0, maxMenuRows);
-
   return (
     <article
       className={[
@@ -41,53 +38,64 @@ export default function HallCard({
         .filter(Boolean)
         .join(" ")}
     >
+      {/* Header */}
       <div className="hall-card__header">
         <div>
           <p className="eyebrow">{hall.area}</p>
           <h3>{hall.name}</h3>
         </div>
 
-        <div
-          className={`match-chip ${
-            standoutHallId === hall.id ? "match-chip--primary" : ""
-          }`}
-        >
-          {hasPersonalizedRankings
-            ? `${matchPercent}% match`
-            : "Campus favorite"}
+        <div className={`match-chip ${standoutHallId === hall.id ? "match-chip--primary" : ""}`}>
+          {hasPersonalizedRankings ? `${matchPercent}% match` : "Campus favorite"}
         </div>
       </div>
 
+      {/* META */}
       <p className="hall-desc">{hall.description}</p>
 
       <div className="hall-meta">
         <div>
           <span className="meta-label">Best for</span>
-          <strong>
-            {hall.goalFocus.map((code) => goalLabelMap[code]).join(" · ")}
-          </strong>
+          <strong>{hall.goalFocus.map(code => goalLabelMap[code]).join(" · ")}</strong>
         </div>
 
         <div>
           <span className="meta-label">Diet ready</span>
-          <strong>
-            {hall.dietOptions.map((code) => dietLabelMap[code]).join(" · ")}
-          </strong>
+          <strong>{hall.dietOptions.map(code => dietLabelMap[code]).join(" · ")}</strong>
         </div>
       </div>
 
-      <ul className="highlight-list">
-        {hall.highlights.map((h) => (
-          <li key={h}>{h}</li>
-        ))}
-      </ul>
+      {/* HIGHLIGHTS DROPDOWN */}
+      <button
+        className="collapse-btn"
+        onClick={() => setShowHighlights(v => !v)}
+      >
+        {showHighlights ? "▲ Hide highlights" : "▼ Show highlights"}
+      </button>
 
-      <MenuSection
-        hallMenu={hallMenu}
-        menuRows={menuRows}
-        hallMenuItems={hallMenuItems}
-        shouldShowFullMenu={shouldShowFullMenu}
-      />
+      {showHighlights && (
+        <ul className="highlight-list">
+          {hall.highlights.map(h => (
+            <li key={h}>{h}</li>
+          ))}
+        </ul>
+      )}
+
+      {/* MENU DROPDOWN */}
+      <button
+        className="collapse-btn"
+        onClick={() => setShowMenu(v => !v)}
+      >
+        {showMenu ? "▲ Hide menu" : "▼ Show menu"}
+      </button>
+
+      {showMenu && (
+        <MenuSection
+          hallMenu={hallMenu}
+          hallMenuItems={hallMenuItems}
+          userProfile={userProfile}
+        />
+      )}
 
       {hasPersonalizedRankings && (
         <PersonalNote
