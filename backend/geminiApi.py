@@ -13,7 +13,7 @@ load_dotenv()
 # Initialize Gemini client
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-ELEVEN_LABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
+ELEVEN_LABS_API_KEY = os.getenv("ELEVEN_LABS_API_KEY")
 VOICE_ID = "EXAVITQu4vr4xnSDxMaL"  # pick preferred voice
 
 app = FastAPI()
@@ -59,7 +59,7 @@ async def tts_endpoint(req: Request):
 
     url = f"https://api.elevenlabs.io/v1/text-to-speech/{VOICE_ID}/stream"
     headers = {
-        "xi-api-key": ELEVENLABS_API_KEY,
+        "xi-api-key": ELEVEN_LABS_API_KEY,
         "Content-Type": "application/json"
     }
     payload = {
