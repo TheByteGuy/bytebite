@@ -12,6 +12,10 @@
   --accent-pink: #e52b4b;
   --accent-purple: #602b7d;
   --accent-gradient: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+  --accent-rgb: 96, 43, 125;
+  --accent-warm-rgb: 229, 43, 75;
+  --accent-contrast: #ad1634;
+  --accent-danger: #c01f3f;
 }
 
 *,
@@ -23,11 +27,46 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: radial-gradient(circle at 20% 0%, rgba(229, 43, 75, 0.25), transparent 55%),
-    radial-gradient(circle at 80% 0%, rgba(96, 43, 125, 0.25), transparent 55%),
+  background: radial-gradient(circle at 20% 0%, rgba(var(--accent-warm-rgb), 0.25), transparent 55%),
+    radial-gradient(circle at 80% 0%, rgba(var(--accent-rgb), 0.25), transparent 55%),
     #faf2f5;
   color: #1e1129;
   padding-bottom: 2rem;
+}
+
+body.colorblind-friendly {
+  --accent-pink: #ff9f1c;
+  --accent-purple: #0f4c81;
+  --accent-gradient: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+  --accent-rgb: 15, 76, 129;
+  --accent-warm-rgb: 255, 159, 28;
+  --accent-contrast: #0b3954;
+  --accent-danger: #e36414;
+  background: radial-gradient(circle at 20% 0%, rgba(15, 76, 129, 0.25), transparent 55%),
+    radial-gradient(circle at 80% 0%, rgba(255, 159, 28, 0.25), transparent 55%),
+    #f4f7fb;
+  color: #0f1b2a;
+}
+
+body.colorblind-friendly .inline-banner {
+  background: rgba(var(--accent-rgb), 0.12);
+  border-color: rgba(var(--accent-rgb), 0.25);
+  color: var(--accent-purple);
+}
+
+body.colorblind-friendly .ghost-button {
+  border-color: rgba(var(--accent-rgb), 0.35);
+  color: var(--accent-purple);
+}
+
+body.colorblind-friendly .ghost-button.danger {
+  border-color: rgba(var(--accent-warm-rgb), 0.45);
+  color: var(--accent-danger);
+}
+
+body.colorblind-friendly .secondary {
+  background: rgba(var(--accent-rgb), 0.12);
+  color: var(--accent-purple);
 }
 
 #root {
@@ -45,11 +84,11 @@ a {
   
   background: linear-gradient(
     135deg,
-    rgba(96, 43, 125, 0.12),
-    rgba(140, 70, 180, 0.18)
+    rgba(var(--accent-rgb), 0.12),
+    rgba(var(--accent-rgb), 0.18)
   );
   
-  border: 1px solid rgba(96, 43, 125, 0.25);
+  border: 1px solid rgba(var(--accent-rgb), 0.25);
   border-radius: 14px;
 
   color: #4a2a60;
@@ -69,15 +108,15 @@ a {
 .collapse-btn:hover {
   background: linear-gradient(
     135deg,
-    rgba(96, 43, 125, 0.18),
-    rgba(140, 70, 180, 0.25)
+    rgba(var(--accent-rgb), 0.18),
+    rgba(var(--accent-rgb), 0.25)
   );
-  border-color: rgba(96, 43, 125, 0.4);
-  box-shadow: 0 3px 6px rgba(96, 43, 125, 0.15);
+  border-color: rgba(var(--accent-rgb), 0.4);
+  box-shadow: 0 3px 6px rgba(var(--accent-rgb), 0.15);
   transform: translateY(-2px);
 }
 
 .collapse-btn:active {
   transform: translateY(0px) scale(0.98);
-  box-shadow: 0 1px 2px rgba(96, 43, 125, 0.1);
+  box-shadow: 0 1px 2px rgba(var(--accent-rgb), 0.1);
 }

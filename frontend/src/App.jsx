@@ -233,6 +233,20 @@ function App() {
   const [hallSpotlightIndex, setHallSpotlightIndex] = useState(0)
   const [hallViewMode, setHallViewMode] = useState('carousel')
 
+  useEffect(() => {
+    const className = 'colorblind-friendly'
+    const { body } = document
+    if (!body) return () => {}
+
+    if (signupForm.colorblindFriendly) {
+      body.classList.add(className)
+    } else {
+      body.classList.remove(className)
+    }
+
+    return () => body.classList.remove(className)
+  }, [signupForm.colorblindFriendly])
+
   const persistPreferences = (profile) => {
     safeStorage.write(profile)
     setUserProfile(profile)
