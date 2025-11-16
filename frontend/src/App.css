@@ -94,13 +94,21 @@
   background: white;
   border-radius: 28px;
   padding: clamp(1.5rem, 2vw, 2.75rem);
+
   display: grid;
-  grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr);
+
+  /* FORCE single column layout */
+  grid-template-columns: 1fr !important;
+
   gap: clamp(1.5rem, 3vw, 3rem);
+
   border: 1px solid rgba(96, 43, 125, 0.1);
   box-shadow: 0 30px 60px rgba(18, 9, 24, 0.08);
 }
-
+/* OPTIONAL: only use 2 columns when you explicitly add a right side */
+.hero.has-image {
+  grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr) !important;
+}
 .hero h1 {
   margin-top: 0.3rem;
   margin-bottom: 0.75rem;
@@ -269,6 +277,9 @@
   flex-direction: column;
   gap: 0.1rem;
 }
+
+
+
 
 .chip small {
   font-weight: 500;
@@ -607,22 +618,8 @@
   color: #a496b3;
   font-size: 0.85rem;
 }
-
-@media (max-width: 900px) {
+@media (min-width: 1100px) {
   .hero {
-    grid-template-columns: 1fr;
-  }
-
-  .dining-header {
-    flex-direction: column;
-  }
-
-  .dining-actions {
-    width: 100%;
-    flex-direction: column;
-  }
-
-  .nav-actions {
-    flex-wrap: wrap;
+    grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr);
   }
 }

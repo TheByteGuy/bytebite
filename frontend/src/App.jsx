@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 import HomePage from './pages/HomePage'
 import DiningPage from './pages/DiningPage'
+import HeroSection from "./components/HeroSection";
 
 const STORAGE_KEY = 'bytebite-profile'
 const MAX_MATCH_SCORE = 6
@@ -161,11 +162,12 @@ function App() {
   const [view, setView] = useState('home')
 
   const [signupForm, setSignupForm] = useState({
-    name: '',
-    goal: 'maintain',
-    diet: 'omnivore',
-    allergies: [],
-  })
+  name: '',
+  goal: '',
+  diet: '',
+  allergies: [],
+})
+
 
   const [userProfile, setUserProfile] = useState(null)
   const [feedback, setFeedback] = useState('')
@@ -283,17 +285,10 @@ function App() {
       )}
 
       <header className="hero">
-        <div>
-          <p className="eyebrow">Build a smarter dining routine</p>
-          <h1>Save your goals and diet—get instant personalized rankings.</h1>
-          <p className="hero-copy">
-            ByteBite ranks every dining hall based on your goals and dietary style as soon as you save your preferences.
-          </p>
-          <div className="hero-cta">
-            <button className="primary" onClick={() => setView('home')}>Start planning</button>
-            <button className="secondary" onClick={() => setView('dining')}>See dining halls</button>
-          </div>
-        </div>
+        <HeroSection
+          onStartPlanning={() => setView('home')}
+          onSeeDining={() => setView('dining')}
+        />
       </header>
 
       {view === 'home' && (
