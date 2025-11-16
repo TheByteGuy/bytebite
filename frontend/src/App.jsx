@@ -26,7 +26,7 @@ const diningHalls = [
   {
     id: 'commons',
     name: 'The Commons Dining Hall',
-    area: 'Freshman Hill · 1999 Burdett Ave',
+    area: 'Commons Dining Hall 1969 Burdett Ave, Troy, NY 12180',
     description:
       'All-you-care-to-eat buffet anchored by the Simple Zone allergen-free area.',
     goalFocus: ['maintain', 'gain'],
@@ -41,7 +41,7 @@ const diningHalls = [
   {
     id: 'sage',
     name: 'Russell Sage Dining Hall',
-    area: 'Central Academic Campus',
+    area: 'Russell Sage Dining Hall 1649 15th St, Troy, NY 12180',
     description:
       'Classic buffet-style hall steps from lecture halls.',
     goalFocus: ['lose', 'maintain'],
@@ -56,7 +56,7 @@ const diningHalls = [
   {
     id: 'barh',
     name: 'BARH Dining Hall',
-    area: '100 Albright Ct · Burdett Ave Residence Hall',
+    area: 'BARH Dining, 100 Albright Ct, Troy, NY 12180',
     description: 'Buffet hall built with athletes in mind.',
     goalFocus: ['maintain', 'gain'],
     dietOptions: ['omnivore', 'vegetarian'],
