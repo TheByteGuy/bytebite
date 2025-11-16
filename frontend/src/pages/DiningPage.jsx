@@ -486,7 +486,7 @@ function DiningPage({
         <div className="menu-section menu-section--full">
           <div className="menu-section__top">
             <div>
-              <span className="meta-label">Live menu </span>
+              <span className="meta-label">Live menu: </span>
               <strong>
                 {hallMenu?.status === 'loaded'
                   ? `${hallMenuItems.length} dish${
@@ -582,11 +582,11 @@ function DiningPage({
           </div>
           <div className="all-halls-metrics">
             <div>
-              <span className="meta-label">Halls ready</span>
+              <span className="meta-label">Halls ready: </span>
               <strong>{Math.max(hallCount - loadingHallCount, 0)}</strong>
             </div>
             <div>
-              <span className="meta-label">Dishes tracked</span>
+              <span className="meta-label">Dishes tracked: </span>
               <strong>{totalMenuItems}</strong>
             </div>
           </div>

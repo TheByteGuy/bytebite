@@ -27,8 +27,8 @@ const dietLabelMap = Object.fromEntries(dietOptions.map(o => [o.value, o.label])
 const diningHalls = [
   {
     id: 'commons',
-    name: 'The Commons Dining Hall',
-    area: 'Commons Dining Hall 1969 Burdett Ave, Troy, NY 12180',
+    name: 'The Commons Dining Hall: ',
+    area: '1969 Burdett Ave',
     description:
       'All-you-care-to-eat buffet anchored by the Simple Zone allergen-free area.',
     goalFocus: ['maintain', 'gain'],
@@ -42,8 +42,8 @@ const diningHalls = [
   },
   {
     id: 'sage',
-    name: 'Russell Sage Dining Hall',
-    area: 'Russell Sage Dining Hall 1649 15th St, Troy, NY 12180',
+    name: 'Russell Sage Dining Hall: ',
+    area: '1649 15th St',
     description:
       'Classic buffet-style hall steps from lecture halls.',
     goalFocus: ['lose', 'maintain'],
@@ -57,8 +57,8 @@ const diningHalls = [
   },
   {
     id: 'barh',
-    name: 'BARH Dining Hall',
-    area: 'BARH Dining, 100 Albright Ct, Troy, NY 12180',
+    name: 'BARH Dining Hall: ',
+    area: '100 Albright Ct',
     description: 'Buffet hall built with athletes in mind.',
     goalFocus: ['maintain', 'gain'],
     dietOptions: ['omnivore', 'vegetarian'],
@@ -71,8 +71,8 @@ const diningHalls = [
   },
   {
     id: 'blitman',
-    name: 'Blitman Dining Hall',
-    area: 'Howard N. Blitman Residence Commons',
+    name: 'Blitman Dining Hall: ',
+    area: 'Howard N. Blitman Commons',
     description:
       'Cozy hall focused on weekday breakfast/dinner and weekend brunch.',
     goalFocus: ['lose', 'maintain'],
