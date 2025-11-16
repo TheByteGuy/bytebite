@@ -1,99 +1,86 @@
-/* Full section width */
+/* ---------------------------
+   MODERN MENU RESTORED STYLE
+   Two-column layout
+   Full-width with reduced left/right padding
+---------------------------- */
+
 .modern-menu {
   width: 100%;
-  padding: 0.5rem 0;
+  padding: 0 2rem;        /* reduced giant spacing */
+  max-width: 1300px;      /* centers on large screens */
+  margin: auto;
 }
 
-/* Section header */
+/* Section title */
 .menu-subtitle {
+  color: #4a2772;
+  font-weight: 700;
   font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--accent-purple);
-  margin-bottom: 0.8rem;
+  margin: 2rem 0 1rem;
 }
 
-/* Grid layout for top picks */
-.menu-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1.2rem;
-  width: 100%;
-}
-
-/* POP CARD */
-.pop-card {
-  background: #ffffff;
-  border-radius: 18px;
-  padding: 1rem 1.2rem;
-  border: 1px solid rgba(96, 43, 125, 0.12);
-  box-shadow: 0 8px 20px rgba(96, 43, 125, 0.08);
-  transition: 0.2s ease;
-}
-
-.pop-card:hover {
-  transform: translateY(-4px);
-  background: #fff8fd;
-  border-color: var(--accent-pink);
-  box-shadow:
-    0 12px 28px rgba(96, 43, 125, 0.15),
-    0 0 10px rgba(229, 43, 75, 0.12);
-}
-
-/* Titles & text */
-.menu-item-title {
-  font-weight: 700;
-  color: #1e1129;
-  margin-bottom: 0.2rem;
-}
-
-.menu-item-meta {
-  font-size: 0.88rem;
-  color: #7d6c90;
-}
-
-/* Divider */
+/* Divider line */
 .menu-divider {
-  height: 2px;
   width: 100%;
-  margin: 1.5rem 0;
-  background: linear-gradient(
-    to right,
-    rgba(96, 43, 125, 0.15),
-    rgba(229, 43, 75, 0.25)
-  );
-  border-radius: 999px;
+  height: 1px;
+  background: rgba(96, 43, 125, 0.15);
+  margin: 2rem 0;
 }
 
-/* Station group header */
-.station-header {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  padding: 0.6rem 0;
-  background: transparent;
-  border: none;
-  color: var(--accent-purple);
-  font-weight: 700;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: 0.25s ease;
-}
+/* ---------------------------
+   Highlighted + Full Menu Cards
+---------------------------- */
 
-.station-header:hover {
-  transform: translateY(-2px);
-  color: var(--accent-pink);
-}
-
-.chevron {
-  font-size: 1.1rem;
-  opacity: 0.7;
-}
-
-/* Station item list */
+/* The grid for Top Picks + full menu */
+.menu-grid,
 .station-items {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
+  gap: 1.25rem 1.5rem; /* vertical + horizontal spacing */
   width: 100%;
-  margin-bottom: 1.5rem;
 }
+
+/* Pop card item */
+.menu-item {
+  background: white;
+  padding: 1.25rem 1.5rem;
+  border-radius: 18px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.07);
+  border: 1px solid rgba(220, 140, 170, 0.15);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+/* Hover lift */
+.menu-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+}
+
+/* Card title */
+.menu-item-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #351a55;
+  margin-bottom: 0.3rem;
+}
+
+/* Metadata (cal + tags) */
+.menu-item-meta {
+  font-size: 0.88rem;
+  color: #6f5a89;
+}
+
+/* ---------------------------
+   Station headers (no dropdown)
+---------------------------- */
+
+.station-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 2rem 0 1rem;
+  color: #4a2772;
+}
+
+
+
+

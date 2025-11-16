@@ -179,8 +179,10 @@
       const compact = JSON.stringify(data, null, 0);
       console.log("CALLING GEMINI");
 await callGemini(
-  "Rank RPI dining halls for muscle gain + lactose avoidance. Output total=100% share per hall + top 3 foods each. No descriptions. Only: Hall, %, 3 foods. Data:" 
-  + compact
+    "Rank RPI dining halls for muscle gain and lactose intolerance. Total=100%. For each hall, output exactly:"+
+    "Hall: X%\n"+
+    "Top3: food1, food2, food3\n"+
+    "Data: " + compact
 );     console.log("success:");
     }
 

@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
-import "../components/modernMenu.css"; 
+import "../components/modernMenu.css";
 
-// ---------------- HELPERS ----------------
+// ---------------------- HELPERS -------------------------
 function groupByStation(items) {
   const groups = {};
   for (const item of items) {
@@ -17,7 +17,6 @@ function rankImportantMeals(items, userProfile) {
   return [...items].sort((a, b) => {
     const calsA = Number(a.calories) || 0;
     const calsB = Number(b.calories) || 0;
-
     const protA = parseInt(a.protein || "0") || 0;
     const protB = parseInt(b.protein || "0") || 0;
 
@@ -40,8 +39,7 @@ function rankImportantMeals(items, userProfile) {
   });
 }
 
-
-// ---------------- MAIN COMPONENT ----------------
+// ---------------------- MAIN COMPONENT -------------------------
 export default function MenuSection({
   hallMenu,
   hallMenuItems,
@@ -54,35 +52,26 @@ export default function MenuSection({
     return <p className="menu-note">Pulling today's feed...</p>;
   if (hallMenu.status === "error")
     return <p className="menu-note error-text">Unable to load menu file.</p>;
+  if (hallMenuItems.length === 0)
+    return <p className="menu-note">No menu items listed yet.</p>;
 
-  // ---------------- FILTERS: bakery, bliss, low-cal ----------------
+  // ONLY REMOVE Bakery + Bliss
   const cleaned = hallMenuItems.filter((item) => {
-    const station = item.station?.toLowerCase() || "";
-    const cals = Number(item.calories) || 0;
-
-    return (
-      station !== "bakery" &&
-      station !== "bliss" &&
-      cals >= 100 // remove low-cal sides / snacks
-    );
+    const st = item.station?.toLowerCase() || "";
+    return st !== "bakery" && st !== "bliss";
   });
 
-  if (cleaned.length === 0)
-    return <p className="menu-note">No qualifying menu items listed yet.</p>;
-
-  // ---------------- TOP PICKS ----------------
   const ranked = useMemo(
     () => rankImportantMeals(cleaned, userProfile).slice(0, 3),
     [cleaned, userProfile]
   );
 
-  // ---------------- GROUPED MENU ----------------
   const grouped = useMemo(() => groupByStation(cleaned), [cleaned]);
 
   return (
     <div className="menu-section modern-menu">
 
-      {/* TOP PICKS */}
+      {/* -------- Top Picks ---------- */}
       <h4 className="menu-subtitle">Top Picks For You</h4>
 
       <div className="menu-grid">
@@ -99,7 +88,7 @@ export default function MenuSection({
 
       <div className="menu-divider"></div>
 
-      {/* FULL MENU */}
+      {/* -------- Full Menu ---------- */}
       <h4 className="menu-subtitle">Full Menu</h4>
 
       {Object.entries(grouped).map(([station, items]) => (
@@ -114,21 +103,26 @@ export default function MenuSection({
   );
 }
 
-
-// ---------------- STATION GROUP DROPDOWN ----------------
+// ---------------- STATION GROUP -------------------------
 function StationGroup({ station, items, expanded }) {
   const [open, setOpen] = useState(expanded);
 
   return (
     <div className="station-group">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="station-header"
-      >
-        <span>{station}</span>
-        <span className="chevron">{open ? "▾" : "▸"}</span>
-      </button>
 
+      {/* ⭐ RESTORED BEAUTIFUL PURPLE HEADER BAR ⭐ */}
+      <div
+        className="station-header-bar"
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span className="station-header-title">{station}</span>
+
+        <span className="chevron">
+          {open ? "▾" : "▸"}
+        </span>
+      </div>
+
+      {/* LIST OF ITEMS */}
       {open && (
         <div className="station-items">
           {items.map((item) => (
