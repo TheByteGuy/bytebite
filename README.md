@@ -18,3 +18,4 @@ Our website solves this by offering:
 - A highly customizable user interface to match individual preferences
 
 ByteBite makes healthy eating simple, fast, and personalized.
+Visit our site at [https://bytebites.tech/](https://bytebites.tech/)
