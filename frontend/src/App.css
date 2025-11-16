@@ -734,20 +734,23 @@
   width: 100%;
 }
 
-/* Center the single hall spotlight view */
-.hall-grid--single {
-  display: flex;
-  justify-content: center;
+/* Make full hall-card full screen width */
+.hall-card {
+  width: 100%;
+  max-width: none !important;
+  margin: 0;
+  box-sizing: border-box;
 }
 
-/* Make cards look consistent */
-.hall-card {
-  background: white;
-  border-radius: 20px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-  border: 1px solid rgba(96,43,125,0.1);
+/* When in spotlight mode, don't center the card */
+.hall-grid--single {
+  grid-template-columns: 1fr;
+  width: 100%;
+  max-width: none !important;
+  margin: 0;
+  padding: 0;
 }
+
 
 /* Make it responsive for mobile */
 @media (max-width: 900px) {
