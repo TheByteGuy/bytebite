@@ -16,6 +16,13 @@ export default function AIAssistant({ menuJson, externalMessages = [], onConsume
   useEffect(() => {
     if (!externalMessages || externalMessages.length === 0) return;
     setMessages(prev => [...prev, ...externalMessages]);
+    
+    const last = messages[messages.length - 1];
+
+    if (last && last.role === "user") {
+      setOpen(true);  
+    }
+    
     if (onConsumeExternalMessages) {
       onConsumeExternalMessages();
     }
