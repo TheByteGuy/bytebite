@@ -154,7 +154,11 @@ function DiningPage({
 
   const renderSpotlightView = () => {
     if (!spotlightHall) {
-      return <div className="menu-note">Select a hall to spotlight and see its full food lineup.</div>
+      return (
+        <div className="menu-note">
+          Select a hall to spotlight and see its full food lineup.
+        </div>
+      )
     }
 
     const hallMenu = (menuData ?? {})[spotlightHall.id]
@@ -173,7 +177,10 @@ function DiningPage({
         ]
           .filter(Boolean)
           .join(' · ')
-      : `${spotlightHall.goalFocus.map((code) => goalLabelMap[code]).slice(0, 2).join(' · ')} ready today`
+      : `${spotlightHall.goalFocus
+          .map((code) => goalLabelMap[code])
+          .slice(0, 2)
+          .join(' · ')} ready today`
 
     return (
       <section className="spotlight-section" aria-live="polite">
@@ -183,29 +190,6 @@ function DiningPage({
             <h3>{spotlightHall.name}</h3>
             <div className="spotlight-badge-row">
               <p className="spotlight-area">{spotlightHall.area}</p>
-              <div
-                className={`match-chip ${
-                  standoutHallId === spotlightHall.id ? 'match-chip--primary' : ''
-                }`.trim()}
-              >
-                {hasPersonalizedRankings ? `${matchPercent}% match` : 'Neutral favorite'}
-              </div>
-            </div>
-          </div>
-          <div className="spotlight-heading__actions">
-            <div className="carousel-controls carousel-controls--compact">
-              <button type="button" className="carousel-button" onClick={goToPreviousHall}>
-                Prev
-              </button>
-              <div className="carousel-status">
-                <strong>
-                  {hallSpotlightIndex + 1}/{hallCount}
-                </strong>
-                <span>Halls</span>
-              </div>
-              <button type="button" className="carousel-button" onClick={goToNextHall}>
-                Next
-              </button>
             </div>
           </div>
         </div>
@@ -231,13 +215,72 @@ function DiningPage({
           </li>
         </ul>
 
+        {/* NAV ROW: Prev | 1/4 Halls | Next */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "0.75rem",
+            margin: "1rem 0 0.5rem",
+          }}
+        >
+          <button
+            type="button"
+            className="carousel-button"
+            onClick={goToPreviousHall}
+            aria-label="Show previous dining hall"
+            style={{ flexShrink: 0 }}
+          >
+            Prev
+          </button>
+
+          <div
+            style={{
+              flex: "1 1 auto",
+              textAlign: "center",
+              lineHeight: 1.2,
+            }}
+          >
+            <strong>
+              {hallSpotlightIndex + 1}/{hallCount}
+            </strong>
+            <div>Halls</div>
+          </div>
+
+          <button
+            type="button"
+            className="carousel-button"
+            onClick={goToNextHall}
+            aria-label="Show next dining hall"
+            style={{ flexShrink: 0 }}
+          >
+            Next
+          </button>
+        </div>
+
+        {/* MATCH BAR ROW RIGHT ABOVE TABLE */}
+        <div style={{ marginBottom: "1rem" }}>
+          <div
+            className={`match-chip ${
+              standoutHallId === spotlightHall.id ? "match-chip--primary" : ""
+            }`.trim()}
+          >
+            {hasPersonalizedRankings ? `${matchPercent}% match` : "Neutral favorite"}
+          </div>
+        </div>
+
+        {/* MENU TABLE SECTION */}
         <div className="menu-section menu-section--full">
           <div className="menu-section__top">
             <div>
               <span className="meta-label">Live menu </span>
               <strong>
                 {hallMenu?.status === 'loaded'
-                  ? `${hallMenuItems.length} dish${hallMenuItems.length === 1 ? '' : 'es'} today`
+                  ? `${hallMenuItems.length} dish${
+                      hallMenuItems.length === 1 ? '' : 'es'
+                    } today`
                   : 'Menu feed'}
               </strong>
             </div>
@@ -248,10 +291,16 @@ function DiningPage({
             )}
           </div>
 
-          {!hallMenu && <p className="menu-note">Menu loads when you open this view.</p>}
-          {hallMenu?.status === 'loading' && <p className="menu-note">Pulling today's feed...</p>}
+          {!hallMenu && (
+            <p className="menu-note">Menu loads when you open this view.</p>
+          )}
+          {hallMenu?.status === 'loading' && (
+            <p className="menu-note">Pulling today's feed...</p>
+          )}
           {hallMenu?.status === 'error' && (
-            <p className="menu-note error-text">Unable to load menu file: {hallMenu.error}</p>
+            <p className="menu-note error-text">
+              Unable to load menu file: {hallMenu.error}
+            </p>
           )}
           {hallMenu?.status === 'loaded' && hallMenuItems.length === 0 && (
             <p className="menu-note">No menu items listed in the JSON yet.</p>
@@ -274,7 +323,9 @@ function DiningPage({
                   {addMealBreaks(hallMenuItems).map((row) => (
                     <tr
                       key={row.id}
-                      className={row.isMealStart ? 'menu-row menu-row--meal-start' : 'menu-row'}
+                      className={
+                        row.isMealStart ? 'menu-row menu-row--meal-start' : 'menu-row'
+                      }
                     >
                       <td>{row.meal}</td>
                       <td>{row.station}</td>
@@ -348,7 +399,9 @@ function DiningPage({
                 {aggregatedRows.map((row) => (
                   <tr
                     key={`${row.hallId}-${row.id}`}
-                    className={row.isMealStart ? 'menu-row menu-row--meal-start' : 'menu-row'}
+                    className={
+                      row.isMealStart ? 'menu-row menu-row--meal-start' : 'menu-row'
+                    }
                   >
                     <td>
                       <div className="hall-col">
@@ -384,7 +437,9 @@ function DiningPage({
         )}
 
         {errorHallNames.length > 0 && (
-          <p className="menu-note error-text">Unable to load menus for {errorHallNames.join(', ')}.</p>
+          <p className="menu-note error-text">
+            Unable to load menus for {errorHallNames.join(', ')}.
+          </p>
         )}
       </section>
     )
@@ -406,9 +461,7 @@ function DiningPage({
             {hasPersonalizedRankings
               ? `Ranked using your ${goalLabelMap[
                   userProfile.goal
-                ].toLowerCase()} goal and ${dietLabelMap[
-                  userProfile.diet
-                ]
+                ].toLowerCase()} goal and ${dietLabelMap[userProfile.diet]
                   .toLowerCase()
                   .replace('no preference', 'omnivore preference')}.`
               : isAuthenticated
@@ -416,10 +469,12 @@ function DiningPage({
               : 'Sign up or log in to sort these halls by your goals and dietary choices.'}
           </p>
         </div>
+
         <div className="dining-actions">
           <button className="ghost-button" type="button" onClick={onBackToPlanner}>
             Back to planner
           </button>
+<<<<<<< Updated upstream
             {isAuthenticated &&
               !hasPersonalizedRankings &&
               userProfile?.goal &&
@@ -428,11 +483,23 @@ function DiningPage({
               hallsToRender.every(
                 (hall) => mergedMenuData[hall.id]?.status === "loaded"
               ) && (
+=======
+
+          {isAuthenticated &&
+            !hasPersonalizedRankings &&
+            userProfile?.goal &&
+            userProfile?.diet &&
+            hallsToRender.length > 0 &&
+            hallsToRender.every(
+              (hall) => mergedMenuData[hall.id]?.status === "loaded"
+            ) && (
+>>>>>>> Stashed changes
               <button
                 className="primary"
                 type="button"
                 onClick={async () => {
                   try {
+<<<<<<< Updated upstream
                     // Convert your menu JSON into a compact string
                     const compactJSON = JSON.stringify(mergedMenuData, null, 0);
 
@@ -472,6 +539,42 @@ function DiningPage({
 )}
 
 
+=======
+                    const compactJSON = JSON.stringify(mergedMenuData, null, 0)
+
+                    const prompt = `Rank RPI dining halls for this user based on their goal (${userProfile.goal}) and diet (${userProfile.diet}). Total=100%. 
+For each hall, output exactly in this format:
+Hall: X%
+Top3: food1, food2, food3
+Data: ${compactJSON}`
+
+                    const resp = await fetch("https://bytebite-bq4x.onrender.com/generate", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ prompt }),
+                    })
+
+                    const data = await resp.json()
+
+                    if (data.text) {
+                      alert("AI Ranking Result:\n\n" + data.text)
+                    } else if (data.error) {
+                      console.error("Gemini API error:", data.error)
+                      alert("Gemini API error: " + data.error)
+                    }
+
+                    // Keep the original personalization behavior
+                    onActivatePersonalization()
+                  } catch (err) {
+                    console.error("Failed to call Gemini:", err)
+                    alert("Failed to fetch AI ranking. See console for details.")
+                  }
+                }}
+              >
+                Personalize my rankings
+              </button>
+            )}
+>>>>>>> Stashed changes
         </div>
       </div>
 
@@ -484,22 +587,26 @@ function DiningPage({
               className="segmented-highlight"
               style={{
                 transform:
-                  hallViewMode === "carousel"
-                    ? "translateX(0%)"
-                    : "translateX(100%)"
+                  hallViewMode === 'carousel'
+                    ? 'translateX(0%)'
+                    : 'translateX(100%)',
               }}
             />
 
             <button
-              className={`segmented-btn ${hallViewMode === "carousel" ? "active" : ""}`}
-              onClick={() => onChangeHallViewMode("carousel")}
+              className={`segmented-btn ${
+                hallViewMode === 'carousel' ? 'active' : ''
+              }`}
+              onClick={() => onChangeHallViewMode('carousel')}
             >
               Spotlight
             </button>
 
             <button
-              className={`segmented-btn ${hallViewMode === "grid" ? "active" : ""}`}
-              onClick={() => onChangeHallViewMode("grid")}
+              className={`segmented-btn ${
+                hallViewMode === 'grid' ? 'active' : ''
+              }`}
+              onClick={() => onChangeHallViewMode('grid')}
             >
               All halls
             </button>
@@ -509,7 +616,6 @@ function DiningPage({
 
       {isCarouselActive ? renderSpotlightView() : renderAllHallsTable()}
       <AIAssistant />
-
     </section>
   )
 }
