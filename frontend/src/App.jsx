@@ -347,7 +347,12 @@ function App() {
     <div className="app-shell">
       <nav className="top-nav">
         <div className="brand">
-          <img src="/ByteBiteOfficialv1.png" alt="ByteBite"/>
+          <img
+            src={signupForm.colorblindFriendly
+              ? "/hackRPILogo-3.png"
+              : "/ByteBiteOfficialv1.png"}
+            alt="ByteBite Logo"
+          />
           <div>
             <p className="eyebrow">ByteBite</p>
             <div id="descLogo"><strong>Campus Fuel Planner</strong></div>
