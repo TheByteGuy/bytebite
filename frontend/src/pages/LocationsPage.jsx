@@ -4,9 +4,9 @@ export default function LocationsPage({ diningHalls }) {
   return (
     <section className="dining-page">
       <div className="dining-header">
-        <p className="eyebrow">Campus Locations</p>
+        <p className="eyebrow">Dining Hall Locations</p>
         <h2>Dining Hall Maps</h2>
-        <p>Find every RPI dining hall quickly on the live map.</p>
+        <p className="eyebrow">Find Nearest Residential Cafe</p>
       </div>
 
       <div className="locations-grid">

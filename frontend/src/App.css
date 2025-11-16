@@ -448,6 +448,10 @@
   font-size: clamp(1.6rem, 3vw, 2rem);
 }
 
+p.eyebrow {
+  margin-top: 20px;
+}
+
 .dining-actions {
   display: flex;
   gap: 0.75rem;
