@@ -345,6 +345,28 @@ function DiningPage({
         return !blockedAllergens.some((bad) => allergenStr.includes(bad))
       })
     }
+
+    const diet = userProfile?.diet?.toLowerCase() ?? "omnivore"
+
+    const getTags = (row) =>
+      Array.isArray(row.tags)
+        ? row.tags.map(t => t.toLowerCase())
+        : (row.tags ? [row.tags.toLowerCase()] : [])
+
+    // apply diet filters
+    if (diet === "vegetarian") {
+      rows = rows.filter((row) => {
+        const tags = getTags(row)
+        return tags.includes("vegetarian") || tags.includes("vegan")
+      })
+    }
+
+    if (diet === "vegan") {
+      rows = rows.filter((row) => {
+        const tags = getTags(row)
+        return tags.includes("vegan")
+      })
+}
     filteredMenuCache.set(hall.id, rows)
     return rows
   }
@@ -517,7 +539,7 @@ function DiningPage({
             </div>
             {hallMenuItems.length > 0 && (
               <span className="menu-note">
-                Pulling every dish from today's feed for {spotlightHall.name}.
+                Pulling every dish from {spotlightHall.name} that matches your needs.
               </span>
             )}
           </div>
