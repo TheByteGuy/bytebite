@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import './App.css'
+
 import HomePage from './pages/HomePage'
 import DiningPage from './pages/DiningPage'
+import LocationsPage from './pages/LocationsPage'   // ⬅ NEW
 import HeroSection from "./components/HeroSection";
 
 const STORAGE_KEY = 'bytebite-profile'
@@ -130,7 +132,6 @@ const sanitizeRemoteMenu = (rawMenu) => {
 }
 
 const MAX_MENU_ROWS = 6
-
 const MENU_CACHE_KEY = 'bytebite-menu-cache-v1'
 
 const menuCache = {
@@ -154,12 +155,9 @@ const menuCache = {
       }
 
       localStorage.setItem(MENU_CACHE_KEY, JSON.stringify(next))
-    } catch {
-      // ignore write errors
-    }
+    } catch {}
   },
 }
-
 
 const safeStorage = {
   read() {
@@ -251,34 +249,24 @@ function App() {
   }, [])
 
   useEffect(() => {
-  if (!feedback) return
-
-  const timer = setTimeout(() => {
-    setFeedback('')
-  }, 3000)
-
-  return () => clearTimeout(timer)
-}, [feedback])
-
+    if (!feedback) return
+    const timer = setTimeout(() => setFeedback(''), 3000)
+    return () => clearTimeout(timer)
+  }, [feedback])
 
   useEffect(() => {
     let isActive = true
     const hallEntries = Object.entries(diningMenuSources)
     const dateParam = new Date().toISOString().split('T')[0]
 
-    // --- read cached menus ---
     const cached = menuCache.read()
     const cachedForToday = cached[dateParam] || {}
 
-    // --- initialize menuData from cache OR mark as loading ---
     setMenuData(() => {
       const initial = {}
       hallEntries.forEach(([hallId]) => {
         if (cachedForToday[hallId]?.data) {
-          initial[hallId] = {
-            status: 'loaded',
-            data: cachedForToday[hallId].data,
-          }
+          initial[hallId] = { status: 'loaded', data: cachedForToday[hallId].data }
         } else {
           initial[hallId] = { status: 'loading' }
         }
@@ -286,13 +274,9 @@ function App() {
       return initial
     })
 
-    // --- fetch only halls **not** in cache ---
     const fetchMenus = async () => {
-      const hallsToFetch = hallEntries.filter(([hallId]) => {
-        return !cachedForToday[hallId]?.data
-      })
-
-      if (hallsToFetch.length === 0) return // everything already cached
+      const hallsToFetch = hallEntries.filter(([hallId]) => !cachedForToday[hallId]?.data)
+      if (hallsToFetch.length === 0) return
 
       await Promise.all(
         hallsToFetch.map(async ([hallId, source]) => {
@@ -307,7 +291,6 @@ function App() {
             if (!response.ok) throw new Error(`Failed to load ${hallId} (HTTP ${response.status})`)
             const raw = await response.json()
             if (!isActive) return
-
             const sanitized = sanitizeRemoteMenu(raw)
 
             setMenuData(prev => ({
@@ -315,7 +298,6 @@ function App() {
               [hallId]: { status: 'loaded', data: sanitized }
             }))
 
-            // --- write to cache ---
             menuCache.write(dateParam, hallId, sanitized)
           } catch (err) {
             if (!isActive) return
@@ -357,9 +339,29 @@ function App() {
             <div id="descLogo"><strong>Campus Fuel Planner</strong></div>
           </div>
         </div>
+
         <div className="nav-actions">
-          <button className={view==='home'?'ghost-button ghost-button--active':'ghost-button'} onClick={()=>setView('home')}>Planner</button>
-          <button className={view==='dining'?'ghost-button ghost-button--active':'ghost-button'} onClick={()=>setView('dining')}>Dining Halls</button>
+          <button
+            className={view==='home' ? 'ghost-button ghost-button--active' : 'ghost-button'}
+            onClick={()=>setView('home')}
+          >
+            Planner
+          </button>
+
+          <button
+            className={view==='dining' ? 'ghost-button ghost-button--active' : 'ghost-button'}
+            onClick={()=>setView('dining')}
+          >
+            Dining Halls
+          </button>
+
+          {/* ⬇ NEW BUTTON */}
+          <button
+            className={view==='locations' ? 'ghost-button ghost-button--active' : 'ghost-button'}
+            onClick={()=>setView('locations')}
+          >
+            Locations
+          </button>
         </div>
       </nav>
 
@@ -414,6 +416,11 @@ function App() {
           maxMenuRows={MAX_MENU_ROWS}
           onBackToPlanner={()=>setView('home')}
         />
+      )}
+
+      {/* ⬇ NEW PAGE */}
+      {view==='locations' && (
+        <LocationsPage diningHalls={diningHalls} />
       )}
 
       <footer className="footer">
