@@ -18,6 +18,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
+        "http://localhost:5174",
         "http://127.0.0.1:3000",
         "https://bytebite.vercel.app",        # your Vercel site
         "https://bytebite-bq4x.onrender.com", # your Render backend
