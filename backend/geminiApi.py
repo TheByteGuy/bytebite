@@ -56,7 +56,11 @@ async def tts_endpoint(req: Request):
         data = await req.json()
         text = data.get("text")
         if not text:
-            return {"error": "No text provided"}
+            return JSONResponse(
+                status_code=400,
+                content={"error": "No text provided"},
+                headers={"Access-Control-Allow-Origin": "*"}
+            )
 
         url = f"https://api.elevenlabs.io/v1/text-to-speech/{VOICE_ID}/stream"
         headers = {
@@ -72,9 +76,12 @@ async def tts_endpoint(req: Request):
         async with httpx.AsyncClient(timeout=None) as client:
             r = await client.post(url, headers=headers, json=payload)
             if r.status_code != 200:
-                return {"error": f"TTS request failed: {r.status_code}, {r.text}"}
+                return JSONResponse(
+                    status_code=502,
+                    content={"error": f"TTS request failed: {r.status_code}, {r.text}"},
+                    headers={"Access-Control-Allow-Origin": "*"}
+                )
 
-            # StreamingResponse with explicit CORS headers
             return StreamingResponse(
                 r.aiter_bytes(),
                 media_type="audio/mpeg",
@@ -82,4 +89,8 @@ async def tts_endpoint(req: Request):
             )
 
     except Exception as e:
-        return {"error": f"TTS server error: {str(e)}"}
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"TTS server error: {str(e)}"},
+            headers={"Access-Control-Allow-Origin": "*"}
+        )
