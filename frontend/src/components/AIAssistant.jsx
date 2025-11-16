@@ -20,7 +20,7 @@ Condense your answer as tightly as possible.
 USER REQUEST: ${prompt}
 `;
 
-  const resp = await fetch("https://bytebite-bq4x.onrender.com/generate", {
+  const resp = await fetch("https://bytebite-615j.onrender.com/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ prompt: shortPrompt })
@@ -63,7 +63,7 @@ USER REQUEST: ${prompt}
 USER REQUEST: ${input}
 `;
 
-  const resp = await fetch("https://bytebite-bq4x.onrender.com/generate", {
+  const resp = await fetch("https://bytebite-615j.onrender.com/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ prompt: shortPrompt })
