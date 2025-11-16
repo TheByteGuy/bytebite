@@ -66,8 +66,16 @@ export default function PreferencesForm({
 
           <ChoicePillRow
             options={[
-              { label: "Visually Impaired Mode", value: "visuallyImpaired" },
-              { label: "Colorblind-Friendly Mode", value: "colorblindFriendly" },
+              {
+                label: "Visually Impaired Mode",
+                value: "visuallyImpaired",
+                tooltip: "(Speaks recommended meal)",
+              },
+              {
+                label: "Colorblind-Friendly Mode",
+                value: "colorblindFriendly",
+                tooltip: "(Red-green colorblindness support)",
+              },
             ]}
             activeValue={[
               ...(signupForm.visuallyImpaired ? ["visuallyImpaired"] : []),

@@ -279,7 +279,7 @@
 /* Base chip */
 .chip {
   position: relative;
-  overflow: hidden;     /* so the animation stays inside */
+  overflow: visible;
   border: 1px solid rgba(var(--accent-rgb), 0.2);
   border-radius: 14px;
   padding: 0.75rem 1rem;
@@ -334,6 +334,31 @@
 
 .chip--active small {
   color: rgba(255, 255, 255, 0.85);
+}
+
+.chip-tooltip {
+  position: absolute;
+  left: 50%;
+  bottom: -2.2rem;
+  transform: translate(-50%, 6px);
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: #100a16;
+  color: #f6f4fa;
+  font-size: 0.7rem;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  border: 1px solid rgba(var(--accent-rgb), 0.2);
+  box-shadow: 0 10px 18px rgba(var(--accent-rgb), 0.22);
+}
+
+.chip:hover .chip-tooltip,
+.chip:focus-visible .chip-tooltip {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 
