@@ -3,7 +3,7 @@ import './App.css'
 
 import HomePage from './pages/HomePage'
 import DiningPage from './pages/DiningPage'
-import LocationsPage from './pages/LocationsPage'   // ⬅ NEW
+import LocationsPage from './pages/LocationsPage'
 import HeroSection from "./components/HeroSection";
 
 const STORAGE_KEY = 'bytebite-profile'
@@ -355,7 +355,6 @@ function App() {
             Dining Halls
           </button>
 
-          {/* ⬇ NEW BUTTON */}
           <button
             className={view==='locations' ? 'ghost-button ghost-button--active' : 'ghost-button'}
             onClick={()=>setView('locations')}
@@ -376,52 +375,54 @@ function App() {
         <HeroSection onStartPlanning={()=>setView('home')} onSeeDining={()=>setView('dining')} />
       </header>
 
-      {view==='home' && (
-        <HomePage
-          signupForm={signupForm}
-          updateSignupField={(field,val)=>setSignupForm(prev=>({...prev,[field]:val}))}
-          handleSavePreferences={(e)=>{
-            e.preventDefault()
-            const profile={...signupForm,name:signupForm.name.trim()||'ByteBiter'}
-            persistPreferences(profile)
-            setFeedback(`Preferences saved! Welcome, ${profile.name.split(' ')[0]}!`)
-            setView('dining')
-          }}
-          goalOptions={goalOptions}
-          dietOptions={dietOptions}
-          heroPreview={diningHalls.slice(0,3)}
-          onNavigateToDining={()=>setView('dining')}
-        />
-      )}
+      {/* ⬇ Pages stay mounted, only hidden/shown */}
+      <main>
+        <section style={{ display: view === 'home' ? 'block' : 'none' }}>
+          <HomePage
+            signupForm={signupForm}
+            updateSignupField={(field,val)=>setSignupForm(prev=>({...prev,[field]:val}))}
+            handleSavePreferences={(e)=>{
+              e.preventDefault()
+              const profile={...signupForm,name:signupForm.name.trim()||'ByteBiter'}
+              persistPreferences(profile)
+              setFeedback(`Preferences saved! Welcome, ${profile.name.split(' ')[0]}!`)
+              setView('dining')
+            }}
+            goalOptions={goalOptions}
+            dietOptions={dietOptions}
+            heroPreview={diningHalls.slice(0,3)}
+            onNavigateToDining={()=>setView('dining')}
+          />
+        </section>
 
-      {view==='dining' && (
-        <DiningPage
-          isAuthenticated={isAuthenticated}
-          showPersonalizeButton={isAuthenticated && hasLoadedMenus}
-          userProfile={userProfile}
-          goalLabelMap={goalLabelMap}
-          dietLabelMap={dietLabelMap}
-          hallCount={hallCount}
-          hallViewMode={hallViewMode}
-          onChangeHallViewMode={setHallViewMode}
-          showCarousel={showCarousel}
-          spotlightHall={spotlightHall}
-          goToPreviousHall={()=>setHallSpotlightIndex(i=>(i-1+hallCount)%hallCount)}
-          goToNextHall={()=>setHallSpotlightIndex(i=>(i+1)%hallCount)}
-          hallSpotlightIndex={hallSpotlightIndex}
-          hallsToRender={hallsToRender}
-          standoutHallId={standoutHallId}
-          menuData={menuData}
-          flattenMenuItems={flattenMenuItems}
-          maxMenuRows={MAX_MENU_ROWS}
-          onBackToPlanner={()=>setView('home')}
-        />
-      )}
+        <section style={{ display: view === 'dining' ? 'block' : 'none' }}>
+          <DiningPage
+            isAuthenticated={isAuthenticated}
+            showPersonalizeButton={isAuthenticated && hasLoadedMenus}
+            userProfile={userProfile}
+            goalLabelMap={goalLabelMap}
+            dietLabelMap={dietLabelMap}
+            hallCount={hallCount}
+            hallViewMode={hallViewMode}
+            onChangeHallViewMode={setHallViewMode}
+            showCarousel={showCarousel}
+            spotlightHall={spotlightHall}
+            goToPreviousHall={()=>setHallSpotlightIndex(i=>(i-1+hallCount)%hallCount)}
+            goToNextHall={()=>setHallSpotlightIndex(i=>(i+1)%hallCount)}
+            hallSpotlightIndex={hallSpotlightIndex}
+            hallsToRender={hallsToRender}
+            standoutHallId={standoutHallId}
+            menuData={menuData}
+            flattenMenuItems={flattenMenuItems}
+            maxMenuRows={MAX_MENU_ROWS}
+            onBackToPlanner={()=>setView('home')}
+          />
+        </section>
 
-      {/* ⬇ NEW PAGE */}
-      {view==='locations' && (
-        <LocationsPage diningHalls={diningHalls} />
-      )}
+        <section style={{ display: view === 'locations' ? 'block' : 'none' }}>
+          <LocationsPage diningHalls={diningHalls} />
+        </section>
+      </main>
 
       <footer className="footer">
         Built with Vite + React · Dining data is illustrative for the ByteBite prototype.
