@@ -707,23 +707,22 @@ function DiningPage({
         <div>
           <p className="eyebrow">Dining Explorer</p>
           <h2>
-            {hasPersonalizedRankings
-              ? `${heroName}'s personalized lineup`
-              : isAuthenticated
-              ? 'Campus menu - signed in'
-              : 'Campus menu - guest view'}
-          </h2>
-          <p>
-            {hasPersonalizedRankings
-              ? `Ranked using your ${goalLabelMap[
-                  userProfile.goal
-                ].toLowerCase()} goal and ${dietLabelMap[userProfile.diet]
-                  .toLowerCase()
-                  .replace('no preference', 'omnivore preference')}.`
-              : isAuthenticated
-              ? 'You are signed in. Tap "Personalize my rankings" to generate your tailored order.'
-              : 'Sign up or log in to sort these halls by your goals and dietary choices.'}
-          </p>
+          {hasPersonalizedRankings
+            ? `${heroName}'s Personalized Lineup`
+            : isAuthenticated
+            ? "Campus Menu — Signed In"
+            : "Campus Menu — Guest View"}
+        </h2>
+
+        <p>
+        {hasPersonalizedRankings
+          ? `Ranked using your ${goalLabelMap[userProfile.goal]} goal and ${dietLabelMap[userProfile.diet]
+              .replace("no preference", "Omnivore Preference")}.`
+          : isAuthenticated
+          ? `You are signed in. Tap “Personalize My Rankings” to generate your tailored list.`
+          : `Sign up or log in to sort dining halls based on your goals and dietary preferences.`}
+      </p>
+
         </div>
 
         <div className="dining-actions">
