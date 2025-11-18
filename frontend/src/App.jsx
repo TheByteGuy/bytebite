@@ -1,447 +1,258 @@
-import { useEffect, useMemo, useState } from 'react'
-
+import { useMemo, useState } from 'react'
+import HeroSection from './components/HeroSection'
 import HomePage from './pages/HomePage'
 import DiningPage from './pages/DiningPage'
 import LocationsPage from './pages/LocationsPage'
-import HeroSection from "./components/HeroSection";
 
-const STORAGE_KEY = 'bytebite-profile'
-const MAX_MATCH_SCORE = 6
-
-const goalOptions = [
-  { value: 'lose', label: 'Lose Weight', description: 'lighter plates & hydration' },
-  { value: 'maintain', label: 'Maintain', description: 'balanced macros every day' },
-  { value: 'gain', label: 'Gain Muscle', description: 'hearty, protein-forward meals' },
+const GOAL_OPTIONS = [
+  { value: 'cut', label: 'Cutting', description: 'Drop fat, keep muscle' },
+  { value: 'maintain', label: 'Maintenance', description: 'Stay steady and fueled' },
+  { value: 'bulk', label: 'Bulking', description: 'Gain strength and recover fast' },
 ]
 
-const dietOptions = [
-  { value: 'omnivore', label: 'No Preference', description: 'happy with omnivore menus' },
-  { value: 'vegetarian', label: 'Vegetarian', description: 'meat-free plates only' },
-  { value: 'vegan', label: 'Vegan', description: '100% plant-powered' },
+const DIET_OPTIONS = [
+  { value: 'vegan', label: 'Vegan', description: 'No animal products' },
+  { value: 'vegetarian', label: 'Vegetarian', description: 'No meat, eggs and dairy ok' },
+  { value: 'none', label: 'No preference', description: 'Omnivore friendly' },
 ]
 
-const goalLabelMap = Object.fromEntries(goalOptions.map(o => [o.value, o.label]))
-const dietLabelMap = Object.fromEntries(dietOptions.map(o => [o.value, o.label]))
+const HERO_PREVIEW = [
+  { id: 'nucleus', name: 'Nucleus', signature: 'High-protein grill', area: 'East Campus' },
+  { id: 'blitman', name: 'Blitman', signature: 'Comfort + salad bar', area: 'Freshmen Hill' },
+  { id: 'commons', name: 'Commons', signature: 'Balanced bowls', area: 'Townhouses' },
+  { id: 'barh', name: 'BARH', signature: 'Vegan rotation', area: 'West Hall' },
+]
 
-const diningHalls = [
+const DINING_HALLS = [
   {
     id: 'commons',
-    name: 'The Commons Dining Hall',
-    area: '1969 Burdett Ave',
-    description:
-      'All-you-care-to-eat buffet anchored by the Simple Zone allergen-free area.',
-    goalFocus: ['maintain', 'gain'],
-    dietOptions: ['omnivore', 'vegetarian', 'vegan'],
-    highlights: [
-      'Simple Zone for nut/gluten-free plates',
-      'Continuous service from breakfast to late dinner',
-      'Comfort bowls plus rotating grills',
-    ],
-    signature: 'Primary hub for first-years',
+    name: 'Commons',
+    area: 'Townhouses',
+    description: 'Best fallback when the other halls are slammed. Good salad toppings and grain bowls.',
+    goalFocus: ['maintain', 'bulk'],
+    dietOptions: ['vegetarian', 'none'],
+    matchPercent: 92,
+    standout: false,
   },
   {
-    id: 'sage',
-    name: 'Russell Sage Dining Hall',
-    area: '1649 15th St',
-    description:
-      'Classic buffet-style hall steps from lecture halls.',
-    goalFocus: ['lose', 'maintain'],
-    dietOptions: ['omnivore', 'vegetarian'],
-    highlights: [
-      'Quick salad/soup combos',
-      'Comfort food counter & pasta theatre',
-      'Great for central-campus students',
-    ],
-    signature: 'Central campus favorite',
-  },
-  {
-    id: 'barh',
-    name: 'BARH Dining Hall',
-    area: '100 Albright Ct',
-    description: 'Buffet hall built with athletes in mind.',
-    goalFocus: ['maintain', 'gain'],
-    dietOptions: ['omnivore', 'vegetarian'],
-    highlights: [
-      'Protein-forward carving station',
-      'Weekend brunch for early practices',
-      'Whole-grain sides & yogurts',
-    ],
-    signature: 'Athlete-ready buffet line',
+    id: 'nucleus',
+    name: 'Nucleus',
+    area: 'East Campus',
+    description: 'Protein heavy grill, fast omelets, and the most consistent produce quality.',
+    goalFocus: ['cut', 'maintain', 'bulk'],
+    dietOptions: ['vegan', 'vegetarian', 'none'],
+    matchPercent: 97,
+    standout: true,
   },
   {
     id: 'blitman',
-    name: 'Blitman Dining Hall',
-    area: 'Howard N. Blitman Commons',
-    description:
-      'Cozy hall focused on weekday breakfast/dinner and weekend brunch.',
-    goalFocus: ['lose', 'maintain'],
-    dietOptions: ['omnivore', 'vegetarian', 'vegan'],
-    highlights: [
-      'Weekend omelet bar',
-      'Weekday breakfast',
-      'Plant-forward bar',
-    ],
-    signature: 'Neighborhood brunch spot',
+    name: 'Blitman',
+    area: 'Freshmen Hill',
+    description: 'Comfort food rotation but solid veggie options and quick grab-and-go.',
+    goalFocus: ['maintain', 'bulk'],
+    dietOptions: ['vegetarian', 'none'],
+    matchPercent: 88,
+    standout: false,
+  },
+  {
+    id: 'barh',
+    name: 'BARH',
+    area: 'West Hall',
+    description: 'Vegan-forward options and the calmest seating during dinner rush.',
+    goalFocus: ['cut', 'maintain'],
+    dietOptions: ['vegan', 'vegetarian'],
+    matchPercent: 84,
+    standout: false,
   },
 ]
 
-const SODEXO_MENU_API_BASE = 'https://api-prd.sodexomyway.net/v0.2/data/menu'
-const SODEXO_API_KEY = '68717828-b754-420d-9488-4c37cb7d7ef7'
-
-const diningMenuSources = {
-  commons: { locationId: '76929001', menuId: '153148' },
-  sage: { locationId: '76929002', menuId: '153157' },
-  barh: { locationId: '76929003', menuId: '153626' },
-  blitman: { locationId: '76929015', menuId: '153702' },
-}
-
-const EXCLUDED_MENU_GROUPS = new Set(['bakery', 'dessert', 'beverages', 'bliss'])
-
-const buildMenuUrl = (source, dateString) =>
-  `${SODEXO_MENU_API_BASE}/${source.locationId}/${source.menuId}?date=${dateString}`
-
-const sanitizeRemoteMenu = (rawMenu) => {
-  const meals = Array.isArray(rawMenu) ? rawMenu : rawMenu?.meals ?? []
-
-  const sanitizedMeals = meals
-    .map((meal) => {
-      const groups = (meal?.groups ?? [])
-        .filter((group) => {
-          if (!group?.name) return false
-          const normalizedName = String(group.name).trim().toLowerCase()
-          return !EXCLUDED_MENU_GROUPS.has(normalizedName)
-        })
-        .map((group) => ({
-          ...group,
-          items: (group?.items ?? []).map((item, idx) => ({
-            ...item,
-            menuItemId: item?.menuItemId ?? idx,
-          })),
-        }))
-        .filter((group) => (group?.items ?? []).length > 0)
-
-      return groups.length > 0 ? { ...meal, groups } : null
-    })
-    .filter(Boolean)
-
-  return {
-    ...(Array.isArray(rawMenu) ? {} : rawMenu),
-    meals: sanitizedMeals,
+const FLATTEN_MENU_ITEMS = (data) => {
+  if (!data || typeof data !== 'object') {
+    return []
   }
-}
 
-const MAX_MENU_ROWS = 6
-const MENU_CACHE_KEY = 'bytebite-menu-cache-v1'
-
-const menuCache = {
-  read() {
-    try {
-      const raw = localStorage.getItem(MENU_CACHE_KEY)
-      return raw ? JSON.parse(raw) : {}
-    } catch {
-      return {}
+  return Object.values(data).flatMap((entry) => {
+    if (Array.isArray(entry)) {
+      return entry
     }
-  },
-  write(date, hallId, payload) {
-    try {
-      const existing = menuCache.read()
-      const next = { ...existing }
-
-      if (!next[date]) next[date] = {}
-      next[date][hallId] = {
-        savedAt: Date.now(),
-        data: payload,
-      }
-
-      localStorage.setItem(MENU_CACHE_KEY, JSON.stringify(next))
-    } catch {}
-  },
-}
-
-const safeStorage = {
-  read() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      return raw ? JSON.parse(raw) : null
-    } catch {
-      return null
+    if (entry && typeof entry === 'object') {
+      return Object.values(entry).flatMap((nested) => (Array.isArray(nested) ? nested : []))
     }
-  },
-  write(v) {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(v))
-    } catch {}
-  },
-}
-
-const getMatchScore = (hall, profile) => {
-  if (!profile) return 0
-  let score = 0
-
-  if (hall.goalFocus.includes(profile.goal)) score += 3
-  if (profile.diet === 'omnivore') score += 1
-  else if (hall.dietOptions.includes(profile.diet)) score += 3
-  if (profile.diet === 'vegan' && hall.dietOptions.includes('vegan')) score += 2
-  if (profile.goal === 'gain' && hall.goalFocus.includes('gain')) score += 1
-
-  return Math.min(score, MAX_MATCH_SCORE)
-}
-
-const buildDietTags = (item = {}) => {
-  const tags = []
-  if (item.isVegan) tags.push('Vegan')
-  else if (item.isVegetarian) tags.push('Vegetarian')
-  if (item.isPlantBased) tags.push('Plant-based')
-  if (item.isMindful) tags.push('Mindful')
-  return tags
-}
-
-const stringifyAllergens = (allergens = []) =>
-  Array.isArray(allergens)
-    ? allergens.map(a => a?.name).filter(Boolean).join(', ')
-    : ''
-
-const flattenMenuItems = (rawMenu) => {
-  if (!rawMenu) return []
-  const meals = Array.isArray(rawMenu) ? rawMenu : rawMenu?.meals ?? []
-  const rows = []
-  meals.forEach((meal) => {
-    meal?.groups?.forEach((group) => {
-      group?.items?.forEach((item, idx) => {
-        rows.push({
-          id: `${meal?.name}-${group?.name}-${item?.menuItemId || idx}`,
-          meal: meal?.name || 'Meal',
-          station: group?.name || 'Station',
-          name: item?.formalName || item?.description || 'Menu item',
-          calories: item?.calories || '—',
-          tags: buildDietTags(item),
-          allergens: stringifyAllergens(item?.allergens),
-        })
-      })
-    })
+    return []
   })
-  return rows
 }
+
+const LOGO_MARK = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'>
+  <defs>
+    <linearGradient id='g' x1='0%' x2='100%' y1='0%' y2='100%'>
+      <stop stop-color='%23602b7d' offset='0%'/>
+      <stop stop-color='%23e52b4b' offset='100%'/>
+    </linearGradient>
+  </defs>
+  <rect width='120' height='120' rx='24' fill='url(%23g)'/>
+  <path d='M28 76c6 12 18 18 32 18 20 0 36-13 36-32 0-14-9-24-26-24-12 0-22 7-22 18 0 8 6 14 16 14 10 0 18-6 18-16 0-9-6-15-16-15-4 0-8 1-10 3' stroke='white' stroke-width='8' fill='none' stroke-linecap='round'/>
+</svg>`
 
 function App() {
-  const [view, setView] = useState('home')
-  const [signupForm, setSignupForm] = useState({ name: '', goal: '', diet: '', allergies: [], visuallyImpaired: false, colorblindFriendly: false });
-  const [userProfile, setUserProfile] = useState(null)
-  const [feedback, setFeedback] = useState('')
-  const [menuData, setMenuData] = useState({})
-  const [hallSpotlightIndex, setHallSpotlightIndex] = useState(0)
+  const [activePage, setActivePage] = useState('home')
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [hasPersonalizedRankings, setHasPersonalizedRankings] = useState(false)
   const [hallViewMode, setHallViewMode] = useState('carousel')
+  const [hallSpotlightIndex, setHallSpotlightIndex] = useState(0)
+  const [signupForm, setSignupForm] = useState({
+    name: 'Avery Byte',
+    email: 'avery@school.edu',
+    allergies: [],
+    goal: 'maintain',
+    diet: 'none',
+    visuallyImpaired: false,
+    colorblindFriendly: false,
+  })
+  const [menuData] = useState({})
 
-  useEffect(() => {
-    const className = 'colorblind-friendly'
-    const { body } = document
-    if (!body) return () => {}
+  const goalLabelMap = useMemo(
+    () => GOAL_OPTIONS.reduce((map, option) => ({ ...map, [option.value]: option.label }), {}),
+    [],
+  )
+  const dietLabelMap = useMemo(
+    () => DIET_OPTIONS.reduce((map, option) => ({ ...map, [option.value]: option.label }), {}),
+    [],
+  )
 
-    if (signupForm.colorblindFriendly) {
-      body.classList.add(className)
-    } else {
-      body.classList.remove(className)
+  const hallsToRender = useMemo(() => {
+    if (!hasPersonalizedRankings) {
+      return [...DINING_HALLS]
     }
+    return [...DINING_HALLS].sort(
+      (hallA, hallB) => (hallB.matchPercent ?? 0) - (hallA.matchPercent ?? 0),
+    )
+  }, [hasPersonalizedRankings])
 
-    return () => body.classList.remove(className)
-  }, [signupForm.colorblindFriendly])
+  const standoutHallId = useMemo(
+    () => hallsToRender.find((hall) => hall.standout)?.id ?? hallsToRender[0]?.id,
+    [hallsToRender],
+  )
 
-  const persistPreferences = (profile) => {
-    safeStorage.write(profile)
-    setUserProfile(profile)
+  const userProfile = {
+    name: signupForm.name || 'Student',
+    goal: signupForm.goal || 'maintain',
+    diet: signupForm.diet || 'none',
   }
 
-  useEffect(() => {
-    const saved = safeStorage.read()
-    if (saved) {
-      setUserProfile(saved)
-      setSignupForm(saved)
-      setFeedback(`Welcome back, ${saved.name.split(' ')[0]}!`)
-      setView('dining')
-    }
-  }, [])
+  const hallCount = hallsToRender.length
+  const spotlightHall = hallCount ? hallsToRender[hallSpotlightIndex % hallCount] : null
 
-  useEffect(() => {
-    if (!feedback) return
-    const timer = setTimeout(() => setFeedback(''), 3000)
-    return () => clearTimeout(timer)
-  }, [feedback])
+  const updateSignupField = (field, value) =>
+    setSignupForm((previous) => ({ ...previous, [field]: value }))
 
-  useEffect(() => {
-    let isActive = true
-    const hallEntries = Object.entries(diningMenuSources)
-    const dateParam = new Date().toISOString().split('T')[0]
+  const handleSavePreferences = (event) => {
+    event.preventDefault()
+    setHasPersonalizedRankings(true)
+    setIsAuthenticated(true)
+    setActivePage('dining')
+  }
 
-    const cached = menuCache.read()
-    const cachedForToday = cached[dateParam] || {}
+  const goToPreviousHall = () =>
+    setHallSpotlightIndex((index) =>
+      hallCount === 0 ? 0 : (index - 1 + hallCount) % Math.max(hallCount, 1),
+    )
+  const goToNextHall = () =>
+    setHallSpotlightIndex((index) => (hallCount === 0 ? 0 : (index + 1) % hallCount))
 
-    setMenuData(() => {
-      const initial = {}
-      hallEntries.forEach(([hallId]) => {
-        if (cachedForToday[hallId]?.data) {
-          initial[hallId] = { status: 'loaded', data: cachedForToday[hallId].data }
-        } else {
-          initial[hallId] = { status: 'loading' }
-        }
-      })
-      return initial
-    })
-
-    const fetchMenus = async () => {
-      const hallsToFetch = hallEntries.filter(([hallId]) => !cachedForToday[hallId]?.data)
-      if (hallsToFetch.length === 0) return
-
-      await Promise.all(
-        hallsToFetch.map(async ([hallId, source]) => {
-          try {
-            const response = await fetch(buildMenuUrl(source, dateParam), {
-              headers: {
-                accept: 'application/json',
-                'content-type': 'application/json',
-                'api-key': SODEXO_API_KEY,
-              },
-            })
-            if (!response.ok) throw new Error(`Failed to load ${hallId} (HTTP ${response.status})`)
-            const raw = await response.json()
-            if (!isActive) return
-            const sanitized = sanitizeRemoteMenu(raw)
-
-            setMenuData(prev => ({
-              ...prev,
-              [hallId]: { status: 'loaded', data: sanitized }
-            }))
-
-            menuCache.write(dateParam, hallId, sanitized)
-          } catch (err) {
-            if (!isActive) return
-            setMenuData(prev => ({
-              ...prev,
-              [hallId]: { status: 'error', error: err.message }
-            }))
-          }
-        })
-      )
-    }
-
-    fetchMenus()
-    return () => { isActive = false }
-  }, [])
-
-  const isAuthenticated = Boolean(userProfile)
-  const hasLoadedMenus = Object.values(menuData).some(m => m.status === 'loaded')
-
-  const hallRankings = useMemo(() => {
-    if (!userProfile) return diningHalls
-    return diningHalls.map(hall => ({ ...hall, score: getMatchScore(hall, userProfile) }))
-  }, [userProfile])
-
-  const hallDisplayList = [...hallRankings].sort((a, b) => b.score - a.score)
-  const hallCount = hallDisplayList.length
-  const showCarousel = hallViewMode === 'carousel'
-  const spotlightHall = hallDisplayList[hallSpotlightIndex % hallCount]
-  const hallsToRender = showCarousel ? [spotlightHall] : hallDisplayList
-  const standoutHallId = hallDisplayList[0]?.id
+  const handleSignOut = () => {
+    setIsAuthenticated(false)
+    setHasPersonalizedRankings(false)
+    setActivePage('home')
+  }
 
   return (
     <div className="app-shell">
-      <nav className="top-nav">
+      <header className="top-nav">
         <div className="brand">
           <div className="brand-logo">
-            <img
-              src={signupForm.colorblindFriendly
-                ? "/hackRPILogo-3.png"
-                : "/ByteBiteOfficialv1.png"}
-              alt="ByteBite Logo"
-            />
+            <img src={LOGO_MARK} alt="ByteBite logo" loading="lazy" />
+          </div>
+          <div className="brand-text">
+            <strong>ByteBite</strong>
+            <div id="descLogo">Campus dining coach</div>
           </div>
         </div>
-
         <div className="nav-actions">
           <button
-            className={view==='home' ? 'ghost-button ghost-button--active' : 'ghost-button'}
-            onClick={()=>setView('home')}
+            type="button"
+            className={`ghost-button ${activePage === 'home' ? 'ghost-button--active' : ''}`}
+            onClick={() => setActivePage('home')}
           >
             Planner
           </button>
-
           <button
-            className={view==='dining' ? 'ghost-button ghost-button--active' : 'ghost-button'}
-            onClick={()=>setView('dining')}
+            type="button"
+            className={`ghost-button ${activePage === 'dining' ? 'ghost-button--active' : ''}`}
+            onClick={() => setActivePage('dining')}
           >
-            Dining Halls
+            Dining explorer
           </button>
-
           <button
-            className={view==='locations' ? 'ghost-button ghost-button--active' : 'ghost-button'}
-            onClick={()=>setView('locations')}
+            type="button"
+            className={`ghost-button ${activePage === 'locations' ? 'ghost-button--active' : ''}`}
+            onClick={() => setActivePage('locations')}
           >
             Locations
           </button>
+          {isAuthenticated && (
+            <button type="button" className="ghost-button danger" onClick={handleSignOut}>
+              Sign out
+            </button>
+          )}
         </div>
-      </nav>
-
-      {feedback && (
-        <div className="inline-banner">
-          <span>{feedback}</span>
-          <button onClick={()=>setFeedback('')}>×</button>
-        </div>
-      )}
-
-      <header className="hero">
-        <HeroSection onStartPlanning={()=>setView('home')} onSeeDining={()=>setView('dining')} />
       </header>
 
-      {/* ⬇ Pages stay mounted, only hidden/shown */}
-      <main>
-        <section style={{ display: view === 'home' ? 'block' : 'none' }}>
+      {activePage === 'home' && (
+        <>
+          <HeroSection
+            onStartPlanning={() => setActivePage('home')}
+            onSeeDining={() => setActivePage('dining')}
+          />
           <HomePage
             signupForm={signupForm}
-            updateSignupField={(field,val)=>setSignupForm(prev=>({...prev,[field]:val}))}
-            handleSavePreferences={(e)=>{
-              e.preventDefault()
-              const profile={...signupForm,name:signupForm.name.trim()||'ByteBiter'}
-              persistPreferences(profile)
-              setFeedback(`Preferences saved! Welcome, ${profile.name.split(' ')[0]}!`)
-              setView('dining')
-            }}
-            goalOptions={goalOptions}
-            dietOptions={dietOptions}
-            heroPreview={diningHalls.slice(0,3)}
-            onNavigateToDining={()=>setView('dining')}
+            updateSignupField={updateSignupField}
+            handleSavePreferences={handleSavePreferences}
+            goalOptions={GOAL_OPTIONS}
+            dietOptions={DIET_OPTIONS}
+            heroPreview={HERO_PREVIEW}
+            onNavigateToDining={() => setActivePage('dining')}
           />
-        </section>
+        </>
+      )}
 
-        <section style={{ display: view === 'dining' ? 'block' : 'none' }}>
-          <DiningPage
-            isAuthenticated={isAuthenticated}
-            showPersonalizeButton={isAuthenticated && hasLoadedMenus}
-            userProfile={userProfile}
-            goalLabelMap={goalLabelMap}
-            dietLabelMap={dietLabelMap}
-            hallCount={hallCount}
-            hallViewMode={hallViewMode}
-            onChangeHallViewMode={setHallViewMode}
-            showCarousel={showCarousel}
-            spotlightHall={spotlightHall}
-            goToPreviousHall={()=>setHallSpotlightIndex(i=>(i-1+hallCount)%hallCount)}
-            goToNextHall={()=>setHallSpotlightIndex(i=>(i+1)%hallCount)}
-            hallSpotlightIndex={hallSpotlightIndex}
-            hallsToRender={hallsToRender}
-            standoutHallId={standoutHallId}
-            menuData={menuData}
-            flattenMenuItems={flattenMenuItems}
-            maxMenuRows={MAX_MENU_ROWS}
-            onBackToPlanner={()=>setView('home')}
-          />
-        </section>
+      {activePage === 'dining' && (
+        <DiningPage
+          isAuthenticated={isAuthenticated}
+          hasPersonalizedRankings={hasPersonalizedRankings}
+          userProfile={userProfile}
+          goalLabelMap={goalLabelMap}
+          dietLabelMap={dietLabelMap}
+          hallViewMode={hallViewMode}
+          onChangeHallViewMode={setHallViewMode}
+          hallCount={hallCount}
+          showCarousel={hallCount > 1}
+          hallSpotlightIndex={hallSpotlightIndex}
+          spotlightHall={spotlightHall}
+          hallsToRender={hallsToRender}
+          goToPreviousHall={goToPreviousHall}
+          goToNextHall={goToNextHall}
+          onBackToPlanner={() => setActivePage('home')}
+          flattenMenuItems={FLATTEN_MENU_ITEMS}
+          standoutHallId={standoutHallId}
+          maxMenuRows={10}
+          menuData={menuData}
+        />
+      )}
 
-        <section style={{ display: view === 'locations' ? 'block' : 'none' }}>
-          <LocationsPage diningHalls={diningHalls} />
-        </section>
-      </main>
+      {activePage === 'locations' && <LocationsPage diningHalls={hallsToRender} />}
 
       <footer className="footer">
-        Built with Vite + React · Dining data is illustrative for the ByteBite prototype.
+        <p>ByteBite · Built for fast menu scouting and personalized rankings.</p>
       </footer>
     </div>
   )
