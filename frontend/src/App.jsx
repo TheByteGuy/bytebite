@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import './App.css'
 
 import HomePage from './pages/HomePage'
 import DiningPage from './pages/DiningPage'
@@ -347,15 +346,13 @@ function App() {
     <div className="app-shell">
       <nav className="top-nav">
         <div className="brand">
-          <img
-            src={signupForm.colorblindFriendly
-              ? "/hackRPILogo-3.png"
-              : "/ByteBiteOfficialv1.png"}
-            alt="ByteBite Logo"
-          />
-          <div>
-            <p className="eyebrow">ByteBite</p>
-            <div id="descLogo"><strong>Campus Fuel Planner</strong></div>
+          <div className="brand-logo">
+            <img
+              src={signupForm.colorblindFriendly
+                ? "/hackRPILogo-3.png"
+                : "/ByteBiteOfficialv1.png"}
+              alt="ByteBite Logo"
+            />
           </div>
         </div>
 
