@@ -1,23 +1,32 @@
 {
-  "name": "bytebite-frontend",
-  "version": "0.0.0",
+  "name": "frontend",
   "private": true,
+  "version": "0.0.0",
   "type": "module",
+  "homepage": "https://bytebites.tech",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "deploy": "vite build && git subtree push --prefix dist origin gh-pages",
+    "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-markdown": "^9.0.1"
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.2",
-    "autoprefixer": "^10.4.20",
+    "@eslint/js": "^9.39.1",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@vitejs/plugin-react": "^5.1.0",
+    "autoprefixer": "^10.4.19",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
     "postcss": "^8.4.47",
-    "tailwindcss": "^3.4.14",
-    "vite": "^5.4.10"
+    "tailwindcss": "^3.4.15",
+    "vite": "^7.2.2"
   }
 }

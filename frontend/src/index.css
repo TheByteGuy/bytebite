@@ -1,66 +1,122 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import './styles/theme.css';
+@import './styles/dining.css';
+@import './styles/ai.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --accent-purple: #602b7d;
-  --accent-pink: #e52b4b;
-  --accent-gradient: linear-gradient(135deg, #602b7d, #e52b4b);
-  --accent-rgb: 96, 43, 125;
-  --accent-warm-rgb: 229, 43, 75;
-  --surface: #ffffff;
-  --page: #f6f2ff;
-  color-scheme: light;
+@layer base {
+  :root {
+    font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+    line-height: 1.6;
+    font-weight: 400;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #fbf7fb;
+    color: #1e1129;
+    --accent-pink: #e52b4b;
+    --accent-purple: #602b7d;
+    --accent-gradient: linear-gradient(135deg, var(--accent-pink), var(--accent-purple));
+    --accent-rgb: 96, 43, 125;
+    --accent-warm-rgb: 229, 43, 75;
+    --accent-contrast: #ad1634;
+    --accent-danger: #c01f3f;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at 20% 0%, rgba(var(--accent-warm-rgb), 0.25), transparent 55%),
+      radial-gradient(circle at 80% 0%, rgba(var(--accent-rgb), 0.25), transparent 55%),
+      #faf2f5;
+    color: inherit;
+    padding-bottom: 2rem;
+  }
+
+  body.colorblind-friendly {
+    --accent-pink: #ff9f1c;
+    --accent-purple: #0f4c81;
+    --accent-gradient: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+    --accent-rgb: 15, 76, 129;
+    --accent-warm-rgb: 255, 159, 28;
+    --accent-contrast: #0b3954;
+    --accent-danger: #e36414;
+    background:
+      radial-gradient(circle at 20% 0%, rgba(15, 76, 129, 0.25), transparent 55%),
+      radial-gradient(circle at 80% 0%, rgba(255, 159, 28, 0.25), transparent 55%),
+      #f4f7fb;
+    color: #0f1b2a;
+  }
+
+  body.colorblind-friendly .inline-banner {
+    background: rgba(var(--accent-rgb), 0.12);
+    border-color: rgba(var(--accent-rgb), 0.25);
+    color: var(--accent-purple);
+  }
+
+  body.colorblind-friendly .ghost-button {
+    border-color: rgba(var(--accent-rgb), 0.35);
+    color: var(--accent-purple);
+  }
+
+  body.colorblind-friendly .ghost-button.danger {
+    border-color: rgba(var(--accent-warm-rgb), 0.45);
+    color: var(--accent-danger);
+  }
+
+  body.colorblind-friendly .secondary {
+    background: rgba(var(--accent-rgb), 0.12);
+    color: var(--accent-purple);
+  }
+
+  #root {
+    min-height: 100vh;
+    padding: 0 1rem;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 }
 
-* {
-  box-sizing: border-box;
-}
+@layer components {
+  .collapse-btn {
+    @apply w-full my-4 flex items-center justify-between rounded-xl px-[1.2rem] py-[0.85rem] font-semibold text-[0.95rem] tracking-[0.3px] transition ease-linear;
+    background: linear-gradient(
+      135deg,
+      rgba(var(--accent-rgb), 0.12),
+      rgba(var(--accent-rgb), 0.18)
+    );
+    border: 1px solid rgba(var(--accent-rgb), 0.25);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    color: #4a2a60;
+  }
 
-body {
-  margin: 0;
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: var(--page);
-  color: #1e1129;
-  line-height: 1.6;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-}
+  .collapse-btn:hover {
+    background: linear-gradient(
+      135deg,
+      rgba(var(--accent-rgb), 0.18),
+      rgba(var(--accent-rgb), 0.25)
+    );
+    border-color: rgba(var(--accent-rgb), 0.4);
+    box-shadow: 0 3px 6px rgba(var(--accent-rgb), 0.15);
+    transform: translateY(-2px);
+  }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  margin: 0;
-  font-weight: 700;
-  color: #1f102b;
-}
-
-strong {
-  font-weight: 700;
-}
-
-p {
-  margin: 0 0 0.35rem 0;
-}
-
-a {
-  color: inherit;
-}
-
-button {
-  font: inherit;
-}
-
-img {
-  max-width: 100%;
-  display: block;
-}
-
-code {
-  font-family: 'SFMono-Regular', Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  .collapse-btn:active {
+    transform: translateY(0px) scale(0.98);
+    box-shadow: 0 1px 2px rgba(var(--accent-rgb), 0.1);
+  }
 }
