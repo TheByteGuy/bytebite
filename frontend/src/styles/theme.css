@@ -15,6 +15,15 @@
 .nav-actions {
   display: flex;
   gap: 0.65rem;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  min-width: 0;
+  margin-left: auto;
+}
+
+.nav-actions > * {
+  flex: 0 1 auto;
 }
 
 
@@ -84,38 +93,27 @@ main {
   color: var(--accent-danger);
 }
 
-@media (max-width: 900px) {
+@media (max-width: 780px) {
   .top-nav {
-    @apply flex-col items-start;
-    gap: 1rem;
+    gap: 0.35rem;
   }
 
   .nav-actions {
-    display: flex;
-    gap: 1rem;
-    margin-left: 0;    /* ← CRITICAL FIX */
+    gap: 0.35rem;
+    width: 100%;
   }
 
-
-  .nav-actions .ghost-button {
-    @apply flex-1 text-center;
+  .nav-actions > * {
+    flex: 1 1 calc(50% - 0.35rem);
+    min-width: 140px;
+    max-width: 100%;
+    text-align: center;
   }
 }
 
-@media (max-width: 850px) {
-  .top-nav {
-    gap: 0.2rem;
-  }
-
-  .nav-actions {
-    display: flex;
-    gap: 0.2rem;
-    margin-left: 0;    /* ← CRITICAL FIX */
-  }
-
-
-  .nav-actions .ghost-button {
-    @apply flex-1 text-center;
+@media (max-width: 560px) {
+  .nav-actions > * {
+    flex: 1 1 100%;
   }
 }
 
