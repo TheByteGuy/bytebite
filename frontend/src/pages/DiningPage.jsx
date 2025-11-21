@@ -596,11 +596,11 @@ function DiningPage({
             </div>
             </div>
                         
-            {/* MOBILE VERSION — OUTSIDE the hidden div */}
+            {/* MOBILE VERSION */}
             <div className="block md:hidden ">
               {hallMenuItems.map(item => (
-                <div key={item.id} className="mobile-card bg-white rounded-xl shadow p-4 mb-4 border border-gray-200">
-                    
+                <div key={item.id} className="mobile-card bg-white rounded-xl shadow p-4 mb-4 border border-gray-300">
+                  <h3>{spotlightHall.name}</h3>
                   <h4 className = "font-bold">{item.name}</h4>
                   
                   <div className="flex justify-between items-start mb-2">
@@ -609,7 +609,9 @@ function DiningPage({
 
                     </div>
                   <p>{item.calories} cal</p>
-                  <p>{item.tags?.join(" · ")}</p>
+                  {item.tags.map(tag => (
+                  <span key={tag} className="p-1 rounded-3xl bg-gray-100"> {tag} </span>
+                ))}
                   <p>{item.allergens}</p>
                 </div>
               ))}
