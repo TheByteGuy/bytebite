@@ -558,8 +558,11 @@ function DiningPage({
           {hallMenu?.status === 'loaded' && hallMenuItems.length === 0 && (
             <p className="menu-note">No menu items listed in the JSON yet.</p>
           )}
-
+        
           {hallMenu?.status === 'loaded' && hallMenuItems.length > 0 && (
+            <>
+            <div className="hidden md:block">
+
             <div className="menu-table-wrapper menu-table-wrapper--full">
               <table className="menu-table menu-table--dense">
                 <thead>
@@ -591,6 +594,27 @@ function DiningPage({
                 </tbody>
               </table>
             </div>
+            </div>
+                        
+            {/* MOBILE VERSION — OUTSIDE the hidden div */}
+            <div className="block md:hidden ">
+              {hallMenuItems.map(item => (
+                <div key={item.id} className="mobile-card bg-white rounded-xl shadow p-4 mb-4 border border-gray-200">
+                    
+                  <h4 className = "font-bold">{item.name}</h4>
+                  
+                  <div className="flex justify-between items-start mb-2">
+                  <p>{item.station}</p>
+                  <p>{item.meal}</p>
+
+                    </div>
+                  <p>{item.calories} cal</p>
+                  <p>{item.tags?.join(" · ")}</p>
+                  <p>{item.allergens}</p>
+                </div>
+              ))}
+            </div>
+        </>
           )}
         </div>
       </section>
