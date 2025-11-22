@@ -117,7 +117,7 @@
     }
 
     async function fetchDiningHallMenu(dhall) {
-      const url = `https://api-prd.sodexomyway.net/v0.2/data/menu/${dhall.location_id}/${dhall.menu_id}?date=2025-11-15`;
+      const url = `https://api-prd.sodexomyway.net/v0.2/data/menu/${dhall.location_id}/${dhall.menu_id}?date=2025-11-21`;
       const resp = await fetch(url, {
         headers: {
           "accept": "application/json",
@@ -148,7 +148,7 @@
       const downloadBtn = document.createElement('div');
       downloadBtn.innerHTML = 'Download All Menus JSON';
       downloadBtn.className = 'download-btn';
-      downloadBtn.onclick = () => downloadJson(allMenus, 'all_dining_halls_menu_2025-11-15.json');
+      downloadBtn.onclick = () => downloadJson(allMenus, 'all_dining_halls_menu_2025-11-21.json');
       output.appendChild(downloadBtn);
     });
   </script>
