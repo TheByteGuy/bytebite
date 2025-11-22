@@ -414,6 +414,15 @@ function DiningPage({
           .slice(0, 2)
           .join(' · ')} ready today`
 
+
+    const showBreakfast = () => {
+      return (
+        <div>
+          Hello World
+        </div>
+      )
+    }
+
     return (
       <section className="spotlight-section" aria-live="polite">
         <div className="spotlight-heading">
@@ -594,8 +603,10 @@ function DiningPage({
                 </tbody>
               </table>
             </div>
+            
             </div>
-                        
+            
+
             {/* MOBILE VERSION */}
             <div className="block md:hidden ">
               {hallMenuItems.map(item => (
@@ -606,8 +617,7 @@ function DiningPage({
                   <div className="flex justify-between items-start mb-2">
                   <p>{item.station}</p>
                   <p>{item.meal}</p>
-
-                    </div>
+                  </div>
                   <p>{item.calories} cal</p>
                   {item.tags.map(tag => (
                   <span key={tag} className="p-1 rounded-3xl bg-gray-100"> {tag} </span>

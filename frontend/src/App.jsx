@@ -270,7 +270,13 @@ function App() {
   useEffect(() => {
     let isActive = true
     const hallEntries = Object.entries(diningMenuSources)
-    const dateParam = new Date().toISOString().split('T')[0]
+    const d = new Date();
+    const dateParam = [
+      d.getFullYear(),
+      String(d.getMonth() + 1).padStart(2, "0"),
+      String(d.getDate()).padStart(2, "0")
+    ].join("-");
+
 
     const cached = menuCache.read()
     const cachedForToday = cached[dateParam] || {}
@@ -294,24 +300,35 @@ function App() {
       await Promise.all(
         hallsToFetch.map(async ([hallId, source]) => {
           try {
-            const response = await fetch(buildMenuUrl(source, dateParam), {
-              headers: {
-                accept: 'application/json',
-                'content-type': 'application/json',
-                'api-key': SODEXO_API_KEY,
-              },
-            })
-            if (!response.ok) throw new Error(`Failed to load ${hallId} (HTTP ${response.status})`)
-            const raw = await response.json()
-            if (!isActive) return
-            const sanitized = sanitizeRemoteMenu(raw)
+           const response = await fetch(buildMenuUrl(source, dateParam), {
+            headers: {
+              accept: 'application/json',
+              'api-key': SODEXO_API_KEY,
+                    },
+                  })
 
-            setMenuData(prev => ({
-              ...prev,
-              [hallId]: { status: 'loaded', data: sanitized }
-            }))
+        // Handle empty menu
+        if (response.status === 204) {
+          throw new Error(`No Sodexo menu published for ${hallId} on ${dateParam}`)
+        }
 
-            menuCache.write(dateParam, hallId, sanitized)
+        // Handle real HTTP error
+        if (!response.ok) {
+          throw new Error(`Failed to load ${hallId} (HTTP ${response.status})`)
+        }
+
+        const raw = await response.json()
+        if (!isActive) return
+
+        const sanitized = sanitizeRemoteMenu(raw)
+
+        setMenuData(prev => ({
+          ...prev,
+          [hallId]: { status: 'loaded', data: sanitized }
+        }))
+
+        menuCache.write(dateParam, hallId, sanitized)
+
           } catch (err) {
             if (!isActive) return
             setMenuData(prev => ({

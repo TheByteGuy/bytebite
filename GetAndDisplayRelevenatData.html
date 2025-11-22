@@ -281,7 +281,7 @@
 
     document.getElementById("fetchBtn").addEventListener("click", async () => {
       const chosen = diningData.find(d => d.menu_id === select.value);
-      const url = `https://api-prd.sodexomyway.net/v0.2/data/menu/${chosen.location_id}/${chosen.menu_id}?date=2025-11-15`;
+      const url = `https://api-prd.sodexomyway.net/v0.2/data/menu/${chosen.location_id}/${chosen.menu_id}?date=2025-11-21`;
 
       document.getElementById("output").textContent = "Loading...";
 
