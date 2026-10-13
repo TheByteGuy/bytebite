@@ -1,7 +1,7 @@
 # ByteBite
 
 ## Members
-- Alex Cavoli ([@TheByteGuy](https://github.com/TheByteGuy))
+- Alex Cavoli (Security Researcher) ([@TheByteGuy](https://github.com/TheByteGuy))
 - Dathan Lang ([@atypicality](https://github.com/atypicality))
 - Brian Tam ([@briantam100](https://github.com/briantam100))
 - Akshat Prakash ([@Akshat752](https://github.com/Akshat752))
